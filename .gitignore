@@ -1,0 +1,27 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+.env
+.streamlit/secrets.toml
+.env
+.streamlit/secrets.toml
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.log
+*.txt
+data/skepticbench_full.json
+data/skepticbench_25.json
+data/skepticbench_new75.json
+data/skepticbench_remaining45.json
+.DS_Store
+Thumbs.db

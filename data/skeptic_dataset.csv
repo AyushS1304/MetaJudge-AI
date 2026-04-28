@@ -1,0 +1,1443 @@
+title,authors,year,abstract,summary,atomic_facts,corrupted_facts,labels
+Learn to Accumulate Evidence from All Training Samples: Theory and Practice,"Deep Pandey, Qi Yu",2023,"Evidential deep learning, built upon belief theory and subjective logic, offers a principled and computationally efficient way to turn a deterministic neural network uncertainty-aware. The resultant evidential models can quantify fine-grained uncertainty using the learned evidence. To ensure theoretically sound evidential models, the evidence needs to be non-negative, which requires special activation functions for model training and inference. This constraint often leads to inferior predictive performance compared to standard softmax models, making it challenging to extend them to many large-scale datasets. To unveil the real cause of this undesired behavior, we theoretically investigate evidential models and identify a fundamental limitation that explains the inferior performance: existing evidential activation functions create zero evidence regions, which prevent the model to learn from training samples falling into such regions. A deeper analysis of evidential activation functions based on our theoretical underpinning inspires the design of a novel regularizer that effectively alleviates this fundamental limitation. Extensive experiments over many challenging real-world datasets and settings confirm our theoretical findings and demonstrate the effectiveness of our proposed approach.","- Evidential deep learning augments deterministic nets with belief‑theoretic Dirichlet outputs, requiring the evidence parameters α‑1 ≥ 0, which forces the use of non‑negative activation functions (e.g., ReLU, Softplus).  
+- The authors prove that all existing evidential activations generate **zero‑evidence regions** in input space, causing the Dirichlet concentration to collapse to the uniform prior and preventing gradient flow for samples that fall inside those regions.  
+- This “dead‑evidence” effect is identified as the root cause of the systematic drop in classification accuracy and calibration compared with standard softmax models on large‑scale benchmarks.  
+- To remedy it, a **novel regularizer** is derived from the theoretical analysis that penalizes the emergence of zero‑evidence zones by encouraging a minimum positive evidence level while preserving the non‑negativity constraint.  
+- Empirical results on CIFAR‑10/100, ImageNet‑1k, and several medical imaging datasets show that the regularized evidential models close the performance gap (≤ 1 % accuracy loss vs. softmax) and retain superior uncertainty quantification (lower ECE, higher AUROC for OOD detection).","- Evidential deep learning augments deterministic neural networks with belief‑theoretic Dirichlet outputs.  
+- Evidential deep learning requires the evidence parameters α − 1 to be ≥ 0.  
+- The non‑negativity requirement on α − 1 forces the use of non‑negative activation functions (e.g., ReLU, Softplus).  
+- The authors prove that all existing evidential activation functions generate zero‑evidence regions in the input space.  
+- Zero‑evidence regions cause the Dirichlet concentration to collapse to the uniform prior.  
+- Zero‑evidence regions prevent gradient flow for samples that fall inside those regions.  
+- The “dead‑evidence” effect is identified as the root cause of the systematic drop in classification accuracy compared with standard softmax models on large‑scale benchmarks.  
+- The “dead‑evidence” effect is identified as the root cause of the systematic drop in calibration compared with standard softmax models on large‑scale benchmarks.  
+- A novel regularizer is derived from the theoretical analysis to remedy the dead‑evidence effect.  
+- The regularizer penalizes the emergence of zero‑evidence zones.  
+- The regularizer encourages a minimum positive evidence level.  
+- The regularizer preserves the non‑negativity constraint on evidence parameters.  
+- Empirical results are reported on CIFAR‑10, CIFAR‑100, ImageNet‑1k, and several medical imaging datasets.  
+- The regularized evidential models close the performance gap to softmax models, achieving ≤ 1 % accuracy loss versus softmax.  
+- The regularized evidential models retain superior uncertainty quantification compared with softmax models.  
+- The regularized evidential models achieve lower Expected Calibration Error (ECE) than softmax models.  
+- The regularized evidential models achieve higher AUROC for out‑of‑distribution (OOD) detection than softmax models.","- Evidential deep learning augments deterministic neural networks with belief‑theoretic Dirichlet outputs.  
+- Evidential deep learning requires the evidence parameters α − 1 to be ≥ 0.  
+- The non‑negativity requirement on α − 1 forces the use of non‑negative activation functions (e.g., ReLU, Softplus).  
+- The authors prove that all existing evidential activation functions generate zero‑evidence regions in the input space.  
+- Zero‑evidence regions cause the Dirichlet concentration to collapse to the uniform prior.  
+- Zero‑evidence regions prevent gradient flow for samples that fall inside those regions.  
+- The “dead‑evidence” effect is identified as the root cause of the systematic drop in classification accuracy compared with standard softmax models on large‑scale benchmarks.  
+- The “dead‑evidence” effect is identified as the root cause of the systematic drop in calibration compared with standard softmax models on large‑scale benchmarks.  
+- A novel regularizer is derived from the theoretical analysis to remedy the dead‑evidence effect.  
+- The regularizer penalizes the emergence of zero‑evidence zones.  
+- The regularizer encourages a minimum positive evidence level.  
+- The regularizer preserves the non‑negativity constraint on evidence parameters.  
+- Empirical results are reported on CIFAR‑10, CIFAR‑100, ImageNet‑1k, and several medical imaging datasets.  
+- The regularized evidential models close the performance gap to softmax models, achieving ≤ 1 % accuracy loss versus softmax.  
+- The regularized evidential models retain superior uncertainty quantification compared with softmax models.  
+- The regularized evidential models achieve lower Expected Calibration Error (ECE) than softmax models.  
+- The regularized evidential models achieve higher AUROC for out‑of‑distribution (OOD) detection than softmax models.","true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+false
+true
+true
+false
+false
+false
+true"
+The Modern Mathematics of Deep Learning,"Julius Berner, Philipp Grohs, Gitta Kutyniok, Philipp Petersen",2021,"We describe the new field of mathematical analysis of deep learning. This field emerged around a list of research questions that were not answered within the classical framework of learning theory. These questions concern: the outstanding generalization power of overparametrized neural networks, the role of depth in deep architectures, the apparent absence of the curse of dimensionality, the surprisingly successful optimization performance despite the non-convexity of the problem, understanding what features are learned, why deep architectures perform exceptionally well in physical problems, and which fine aspects of an architecture affect the behavior of a learning task in which way. We present an overview of modern approaches that yield partial answers to these questions. For selected approaches, we describe the main ideas in more detail.","**Mathematical Analysis of Deep Learning – 5‑line Technical Summary**
+
+1. **Over‑parameterization & Generalization:** Recent theory shows that wide, over‑parameterized networks lie in a “lazy” regime where gradient descent converges to global minima of the empirical risk, yet implicit regularization (e.g., kernel‑like bias of the Neural Tangent Kernel) yields surprisingly low test error despite zero training error.  
+
+2. **Depth & Expressivity:** Depth provides exponential representation power; results on hierarchical tensor decompositions and circuit complexity prove that certain functions can be realized with polynomial size deep nets but require super‑polynomial size shallow nets.  
+
+3. **Curse‑of‑Dimensionality Mitigation:** For functions with compositional structure (e.g., Barron‑type or Sobolev‑smoothness on low‑dimensional manifolds), deep ReLU networks achieve approximation rates \(O(N^{-2/d_{\text{eff}}})\) where \(d_{\text{eff}}\ll d\), thereby bypassing the classical \(N^{-2/d}\) curse.  
+
+4. **Non‑convex Optimization Success:** Landscape analyses (e.g., strict saddle property, over‑parameterized matrix factorization) demonstrate that all local minima are global and that gradient‑based methods avoid saddles with high probability, explaining efficient training despite non‑convexity.  
+
+5. **Feature Learning & Physical Priors:** Recent works on mean‑field limits and information‑bottleneck theory reveal that gradient flow drives networks toward low‑complexity feature manifolds aligned with underlying physical symmetries (e.g., translation invariance, conservation laws), accounting for superior performance on scientific tasks and highlighting architecture‑specific inductive biases.","- Recent theoretical work shows that wide, over‑parameterized neural networks operate in a “lazy” regime in which gradient descent converges to global minima of the empirical risk.  
+- In this regime, implicit regularization—such as the kernel‑like bias of the Neural Tangent Kernel—produces surprisingly low test error even though training error is zero.  
+- Increasing depth gives neural networks exponential representation power.  
+- Results from hierarchical tensor decompositions and circuit‑complexity theory prove that some functions can be represented by deep networks of polynomial size but would require super‑polynomial size shallow networks.  
+- For functions that have compositional structure (e.g., Barron‑type functions or Sobolev‑smooth functions defined on low‑dimensional manifolds), deep ReLU networks achieve approximation error that scales as \(O(N^{-2/d_{\text{eff}}})\).  
+- In the above bound, the effective dimension \(d_{\text{eff}}\) is much smaller than the ambient input dimension \(d\).  
+- Consequently, deep networks can bypass the classical curse‑of‑dimensionality rate \(O(N^{-2/d})\).  
+- Landscape analyses—such as those establishing the strict‑saddle property and studying over‑parameterized matrix factorization—show that every local minimum of the loss is a global minimum.  
+- Gradient‑based optimization algorithms avoid strict saddles with high probability.  
+- These facts explain why training non‑convex deep networks can be efficient in practice.  
+- Mean‑field limit analyses reveal that gradient flow drives network parameters toward low‑complexity feature manifolds that align with underlying physical symmetries (e.g., translation invariance, conservation laws).  
+- Information‑bottleneck theory similarly indicates that learning dynamics favor low‑complexity feature representations that respect such physical priors.  
+- Alignment of learned features with physical symmetries accounts for the superior performance of deep networks on scientific tasks.  
+- The observed behavior highlights the role of architecture‑specific inductive biases in deep learning.","- Recent theoretical work shows that wide, over‑parameterized neural networks operate in a “lazy” regime in which gradient descent converges to global minima of the empirical risk.  
+- In this regime, implicit regularization—such as the kernel‑like bias of the Neural Tangent Kernel—produces surprisingly low test error even though training error is zero.  
+- Increasing depth gives neural networks exponential representation power.  
+- Results from hierarchical tensor decompositions and circuit‑complexity theory prove that some functions can be represented by deep networks of polynomial size but would require super‑polynomial size shallow networks.  
+- For functions that have compositional structure (e.g., Barron‑type functions or Sobolev‑smooth functions defined on low‑dimensional manifolds), deep ReLU networks achieve approximation error that scales as \(O(N^{-2/d_{\text{eff}}})\).  
+- In the above bound, the effective dimension \(d_{\text{eff}}\) is much smaller than the ambient input dimension \(d\).  
+- Consequently, deep networks can bypass the classical curse‑of‑dimensionality rate \(O(N^{-2/d})\).  
+- Landscape analyses—such as those establishing the strict‑saddle property and studying over‑parameterized matrix factorization—show that every local minimum of the loss is a global minimum.  
+- Gradient‑based optimization algorithms avoid strict saddles with high probability.  
+- These facts explain why training non‑convex deep networks can be efficient in practice.  
+- Mean‑field limit analyses reveal that gradient flow drives network parameters toward low‑complexity feature manifolds that align with underlying physical symmetries (e.g., translation invariance, conservation laws).  
+- Information‑bottleneck theory similarly indicates that learning dynamics favor low‑complexity feature representations that respect such physical priors.  
+- Alignment of learned features with physical symmetries accounts for the superior performance of deep networks on scientific tasks.  
+- The observed behavior highlights the role of architecture‑specific inductive biases in deep learning.","true
+true
+true
+true
+true
+true
+true
+false
+true
+true
+true
+false
+true
+true"
+Deep Learning and Computational Physics (Lecture Notes),"Deep Ray, Orazio Pinti, Assad A. Oberai",2023,"These notes were compiled as lecture notes for a course developed and taught at the University of the Southern California. They should be accessible to a typical engineering graduate student with a strong background in Applied Mathematics.
+  The main objective of these notes is to introduce a student who is familiar with concepts in linear algebra and partial differential equations to select topics in deep learning. These lecture notes exploit the strong connections between deep learning algorithms and the more conventional techniques of computational physics to achieve two goals. First, they use concepts from computational physics to develop an understanding of deep learning algorithms. Not surprisingly, many concepts in deep learning can be connected to similar concepts in computational physics, and one can utilize this connection to better understand these algorithms. Second, several novel deep learning algorithms can be used to solve challenging problems in computational physics. Thus, they offer someone who is interested in modeling a physical phenomena with a complementary set of tools.","- The notes bridge deep‑learning theory with computational physics, assuming familiarity with linear‑algebraic operators, eigen‑decompositions, and PDE discretizations (finite‑difference/finite‑element).  
+- They recast neural‑network training as an optimization of high‑dimensional loss functionals, drawing parallels to variational formulations and gradient‑based solvers (e.g., conjugate‑gradient, Newton‑Krylov).  
+- Back‑propagation is presented as an adjoint‑state method, analogous to reverse‑mode automatic differentiation used for sensitivity analysis in PDE‑constrained optimization.  
+- Novel architectures (physics‑informed neural networks, operator‑learning kernels, and graph‑based convolutions) are derived to approximate solution operators of nonlinear PDEs, achieving mesh‑free surrogate models with provable error bounds.  
+- The curriculum demonstrates how these deep‑learning tools can accelerate forward/inverse problems in fluid dynamics, electromagnetics, and quantum many‑body simulations, providing a unified computational framework for engineers.",#NAME?,#NAME?,"false
+true
+true
+false
+false
+false
+true
+true
+true
+true
+false
+false
+false
+true
+true
+true
+true
+true
+true
+false
+true
+false
+false
+false
+true
+true
+true"
+A multitask deep learning model for real-time deployment in embedded systems,"Miquel Martí, Atsuto Maki",2017,"We propose an approach to Multitask Learning (MTL) to make deep learning models faster and lighter for applications in which multiple tasks need to be solved simultaneously, which is particularly useful in embedded, real-time systems. We develop a multitask model for both Object Detection and Semantic Segmentation and analyze the challenges that appear during its training. Our multitask network is 1.6x faster, lighter and uses less memory than deploying the single-task models in parallel. We conclude that MTL has the potential to give superior performance in exchange of a more complex training process that introduces challenges not present in single-task models.","**Paper Summary (5 technical lines)**  
+
+1. **MTL Architecture** – Designed a unified deep network that shares a common backbone (e.g., ResNet‑50) and branches into two heads: one for anchor‑based object detection (Faster‑RCNN‑style) and one for dense pixel‑wise semantic segmentation (FCN/DeepLab‑style).  
+
+2. **Training Challenges** – Encountered gradient interference between detection (region‑level loss) and segmentation (pixel‑level loss), requiring task‑specific loss weighting, gradient‑norm balancing (e.g., GradNorm), and careful scheduling of learning‑rate warm‑up.  
+
+3. **Efficiency Gains** – The multitask model runs **1.6× faster** (≈ 30 ms vs 48 ms per image on a 1080 Ti), reduces parameter count by **≈ 38 %** (≈ 45 M vs 73 M), and cuts GPU memory usage by **≈ 30 %** compared with running separate single‑task models in parallel.  
+
+4. **Performance Trade‑off** – Achieves comparable detection mAP (≈ 0.71 vs 0.73) and segmentation mIoU (≈ 0.68 vs 0.70) to the individual baselines, demonstrating that modest accuracy loss is offset by substantial resource savings.  
+
+5. **Conclusion** – Multitask learning can deliver faster, lighter embedded inference for simultaneous detection + segmentation, but demands sophisticated training strategies to mitigate task conflict and ensure stable convergence.","- The multitask learning (MTL) architecture uses a shared backbone network (e.g., ResNet‑50).  
+- The MTL network branches into two task‑specific heads: an anchor‑based object‑detection head that follows the Faster‑RCNN design.  
+- The MTL network also branches into a dense pixel‑wise semantic‑segmentation head that follows an FCN/DeepLab design.  
+- Training the MTL model encounters gradient interference between the region‑level detection loss and the pixel‑level segmentation loss.  
+- The authors address gradient interference by applying task‑specific loss weighting.  
+- The authors address gradient interference by using gradient‑norm balancing (e.g., GradNorm).  
+- The authors address gradient interference by employing a carefully scheduled learning‑rate warm‑up.  
+- The multitask model processes an image in approximately 30 ms on an NVIDIA 1080 Ti, which is about 1.6 times faster than the 48 ms required by separate single‑task models.  
+- The multitask model contains roughly 45 million parameters, representing an ≈ 38 % reduction compared with the combined 73 million parameters of the two separate single‑task models.  
+- The multitask model uses about 30 % less GPU memory than running the two single‑task models in parallel.  
+- The multitask model achieves a detection mean average precision (mAP) of ≈ 0.71, compared with 0.73 for the dedicated detection baseline.  
+- The multitask model achieves a segmentation mean intersection‑over‑union (mIoU) of ≈ 0.68, compared with 0.70 for the dedicated segmentation baseline.  
+- The modest drops in detection mAP and segmentation mIoU are considered acceptable given the substantial reductions in inference time, parameter count, and memory usage.  
+- The authors conclude that multitask learning can provide faster, lighter embedded inference for simultaneous detection + segmentation.  
+- The authors also conclude that successful multitask learning requires sophisticated training strategies to mitigate task conflict and ensure stable convergence.","- The multitask learning (MTL) architecture uses a shared backbone network (e.g., ResNet‑50).  
+- The MTL network branches into two task‑specific heads: an anchor‑based object‑detection head that follows the Faster‑RCNN design.  
+- The MTL network also branches into a dense pixel‑wise semantic‑segmentation head that follows an FCN/DeepLab design.  
+- Training the MTL model encounters gradient interference between the region‑level detection loss and the pixel‑level segmentation loss.  
+- The authors address gradient interference by applying task‑specific loss weighting.  
+- The authors address gradient interference by using gradient‑norm balancing (e.g., GradNorm).  
+- The authors address gradient interference by employing a carefully scheduled learning‑rate warm‑up.  
+- The multitask model processes an image in approximately 30 ms on an NVIDIA 1080 Ti, which is about 1.6 times faster than the 48 ms required by separate single‑task models.  
+- The multitask model contains roughly 45 million parameters, representing an ≈ 38 % reduction compared with the combined 73 million parameters of the two separate single‑task models.  
+- The multitask model uses about 30 % less GPU memory than running the two single‑task models in parallel.  
+- The multitask model achieves a detection mean average precision (mAP) of ≈ 0.71, compared with 0.73 for the dedicated detection baseline.  
+- The multitask model achieves a segmentation mean intersection‑over‑union (mIoU) of ≈ 0.68, compared with 0.70 for the dedicated segmentation baseline.  
+- The modest drops in detection mAP and segmentation mIoU are considered acceptable given the substantial reductions in inference time, parameter count, and memory usage.  
+- The authors conclude that multitask learning can provide faster, lighter embedded inference for simultaneous detection + segmentation.  
+- The authors also conclude that successful multitask learning requires sophisticated training strategies to mitigate task conflict and ensure stable convergence.","false
+false
+true
+true
+false
+true
+true
+true
+false
+false
+true
+true
+true
+true
+true"
+Deep learning observables in computational fluid dynamics,"Kjetil O. Lye, Siddhartha Mishra, Deep Ray",2019,"Many large scale problems in computational fluid dynamics such as uncertainty quantification, Bayesian inversion, data assimilation and PDE constrained optimization are considered very challenging computationally as they require a large number of expensive (forward) numerical solutions of the corresponding PDEs. We propose a machine learning algorithm, based on deep artificial neural networks, that predicts the underlying \emph{input parameters to observable} map from a few training samples (computed realizations of this map). By a judicious combination of theoretical arguments and empirical observations, we find suitable network architectures and training hyperparameters that result in robust and efficient neural network approximations of the parameters to observable map. Numerical experiments are presented to demonstrate low prediction errors for the trained network networks, even when the network has been trained with a few samples, at a computational cost which is several orders of magnitude lower than the underlying PDE solver.
+  Moreover, we combine the proposed deep learning algorithm with Monte Carlo (MC) and Quasi-Monte Carlo (QMC) methods to efficiently compute uncertainty propagation for nonlinear PDEs. Under the assumption that the underlying neural networks generalize well, we prove that the deep learning MC and QMC algorithms are guaranteed to be faster than the baseline (quasi-) Monte Carlo methods. Numerical experiments demonstrating one to two orders of magnitude speed up over baseline QMC and MC algorithms, for the intricate problem of computing probability distributions of the observable, are also presented.","**Paper Summary (5 technical lines)**  
+
+1. **Problem & Goal:**  
+   - Tackles computationally intensive CFD tasks (UQ, Bayesian inversion, data assimilation, PDE‑constrained optimization) that require many expensive forward PDE solves.  
+   - Seeks a surrogate that directly maps *input parameters* → *observable* using only a few high‑fidelity training samples.
+
+2. **Neural‑Network Surrogate Design:**  
+   - Employs deep fully‑connected (or residual) feed‑forward networks with ReLU activations; depth ≈ 8–12 layers, width ≈ 200–500 neurons per layer, and skip‑connections to capture multiscale PDE features.  
+   - Training uses Adam optimizer, learning‑rate schedule (initial 1e‑3, cosine decay), L2 regularization, and early stopping based on validation loss.
+
+3. **Theoretical & Empirical Justification:**  
+   - Combines approximation theory (Barron‑type bounds for high‑dimensional parameter‑to‑observable maps) with empirical risk minimization to show that, with \(N\) training samples, the generalization error scales as \(\mathcal{O}(N^{-1/2})\) up to a network‑capacity term.  
+   - Demonstrates robustness to over‑parameterization: networks with far more parameters than samples still generalize well due to implicit regularization of SGD.
+
+4. **Integration with MC/QMC:**  
+   - Replaces each costly PDE evaluation in Monte‑Carlo or Quasi‑Monte‑Carlo estimators by a forward pass through the trained network, yielding an estimator \(\hat{\mathbb{E}}[f(\theta)]\) with variance identical to the baseline but computational cost reduced by a factor equal to the PDE‑solver runtime per sample.  
+   - Proves that, assuming bounded surrogate error \(\epsilon\), the total error of the deep‑learning MC/QMC estimator is \(\mathcal{O}(\epsilon + N^{-1/2})\) (MC) or \(\mathcal{O}(\epsilon + N^{-1})\) (QMC), guaranteeing asymptotic speed‑up over pure MC/QMC.
+
+5. **Numerical Results & Speed‑up:**  
+   - On benchmark nonlinear Navier–Stokes and advection‑diffusion PDEs, networks trained with as few as 50–100 samples achieve < 1 % relative prediction error.  
+   - Deep‑learning MC/QMC yields 10–100× reduction in wall‑clock time versus standard QMC/MC while preserving the accuracy of the observable’s probability distribution.","- The paper addresses computationally intensive CFD tasks—including uncertainty quantification, Bayesian inversion, data assimilation, and PDE‑constrained optimization—that require many expensive forward PDE solves.  
+- The goal of the work is to construct a surrogate that maps input parameters directly to an observable using only a few high‑fidelity training samples.  
+- The surrogate is implemented as a deep fully‑connected (or residual) feed‑forward neural network with ReLU activations.  
+- The network depth is approximately 8–12 layers.  
+- Each hidden layer contains roughly 200–500 neurons.  
+- Skip‑connections are incorporated to capture multiscale PDE features.  
+- The network is trained with the Adam optimizer.  
+- The learning‑rate schedule starts at 1e‑3 and follows a cosine decay.  
+- L2 regularization is applied during training.  
+- Early stopping is used based on validation loss.  
+- The theoretical analysis combines approximation theory (Barron‑type bounds) for high‑dimensional parameter‑to‑observable maps with empirical risk minimization.  
+- The analysis shows that, with \(N\) training samples, the generalization error scales as \(\mathcal{O}(N^{-1/2})\) up to a term that depends on network capacity.  
+- The paper demonstrates that over‑parameterized networks (more parameters than training samples) still generalize well because stochastic gradient descent provides implicit regularization.  
+- In Monte‑Carlo (MC) or Quasi‑Monte‑Carlo (QMC) estimators, each costly PDE evaluation is replaced by a forward pass through the trained neural network.  
+- The resulting estimator \(\hat{\mathbb{E}}[f(\theta)]\) has the same variance as the baseline estimator that uses the full PDE solver.  
+- The computational cost of the estimator is reduced by a factor equal to the runtime of one PDE solve per sample.  
+- Assuming the surrogate error is bounded by \(\epsilon\), the total error of the deep‑learning MC estimator is \(\mathcal{O}(\epsilon + N^{-1/2})\).  
+- Assuming the surrogate error is bounded by \(\epsilon\), the total error of the deep‑learning QMC estimator is \(\mathcal{O}(\epsilon + N^{-1})\).  
+- These error bounds guarantee an asymptotic speed‑up over pure MC or QMC methods.  
+- Numerical experiments on benchmark nonlinear Navier–Stokes and advection‑diffusion PDEs show that networks trained with as few as 50–100 high‑fidelity samples achieve less than 1 % relative prediction error.  
+- Using the deep‑learning surrogate within MC/QMC yields a 10–100× reduction in wall‑clock time compared with standard MC/QMC while preserving the accuracy of the observable’s probability distribution.  ","- The paper addresses computationally intensive CFD tasks—including uncertainty quantification, Bayesian inversion, data assimilation, and PDE‑constrained optimization—that require many expensive forward PDE solves.  
+- The goal of the work is to construct a surrogate that maps input parameters directly to an observable using only a few high‑fidelity training samples.  
+- The surrogate is implemented as a deep fully‑connected (or residual) feed‑forward neural network with ReLU activations.  
+- The network depth is approximately 8–12 layers.  
+- Each hidden layer contains roughly 200–500 neurons.  
+- Skip‑connections are incorporated to capture multiscale PDE features.  
+- The network is trained with the Adam optimizer.  
+- The learning‑rate schedule starts at 1e‑3 and follows a cosine decay.  
+- L2 regularization is applied during training.  
+- Early stopping is used based on validation loss.  
+- The theoretical analysis combines approximation theory (Barron‑type bounds) for high‑dimensional parameter‑to‑observable maps with empirical risk minimization.  
+- The analysis shows that, with \(N\) training samples, the generalization error scales as \(\mathcal{O}(N^{-1/2})\) up to a term that depends on network capacity.  
+- The paper demonstrates that over‑parameterized networks (more parameters than training samples) still generalize well because stochastic gradient descent provides implicit regularization.  
+- In Monte‑Carlo (MC) or Quasi‑Monte‑Carlo (QMC) estimators, each costly PDE evaluation is replaced by a forward pass through the trained neural network.  
+- The resulting estimator \(\hat{\mathbb{E}}[f(\theta)]\) has the same variance as the baseline estimator that uses the full PDE solver.  
+- The computational cost of the estimator is reduced by a factor equal to the runtime of one PDE solve per sample.  
+- Assuming the surrogate error is bounded by \(\epsilon\), the total error of the deep‑learning MC estimator is \(\mathcal{O}(\epsilon + N^{-1/2})\).  
+- Assuming the surrogate error is bounded by \(\epsilon\), the total error of the deep‑learning QMC estimator is \(\mathcal{O}(\epsilon + N^{-1})\).  
+- These error bounds guarantee an asymptotic speed‑up over pure MC or QMC methods.  
+- Numerical experiments on benchmark nonlinear Navier–Stokes and advection‑diffusion PDEs show that networks trained with as few as 50–100 high‑fidelity samples achieve less than 1 % relative prediction error.  
+- Using the deep‑learning surrogate within MC/QMC yields a 10–100× reduction in wall‑clock time compared with standard MC/QMC while preserving the accuracy of the observable’s probability distribution.  ","true
+true
+false
+true
+true
+true
+true
+false
+true
+false
+true
+true
+false
+false
+true
+false
+true
+true
+false
+true
+true"
+WiCV 2019: The Sixth Women In Computer Vision Workshop,"Irene Amerini, Elena Balashova, Sayna Ebrahimi, Kathryn Leonard, Arsha Nagrani, Amaia Salvador",2019,"In this paper we present the Women in Computer Vision Workshop - WiCV 2019, organized in conjunction with CVPR 2019. This event is meant for increasing the visibility and inclusion of women researchers in the computer vision field. Computer vision and machine learning have made incredible progress over the past years, but the number of female researchers is still low both in academia and in industry. WiCV is organized especially for the following reason: to raise visibility of female researchers, to increase collaborations between them, and to provide mentorship to female junior researchers in the field. In this paper, we present a report of trends over the past years, along with a summary of statistics regarding presenters, attendees, and sponsorship for the current workshop.","- The paper reports the organization and outcomes of WiCV 2019, a CVPR‑co‑located workshop aimed at boosting visibility, collaboration, and mentorship for women in computer‑vision research.  
+- It presents quantitative analyses of gender‑balanced participation trends (e.g., proportion of female presenters vs. total presenters, attendee gender breakdown, and year‑over‑year growth rates).  
+- Statistical summaries include counts of accepted oral/poster papers, keynote speakers, and industry sponsors, together with acceptance ratios and sponsorship contribution percentages.  
+- Methodologically, the authors compiled registration logs, submission metadata, and sponsor invoices, applying descriptive statistics and chi‑square tests to assess significance of observed gender disparities.  
+- The findings highlight a steady increase in female representation (both in submissions and attendance) and underscore the workshop’s role in fostering mentorship pipelines and cross‑institutional collaborations.",#NAME?,#NAME?,"true
+false
+true
+true
+false
+false
+true
+true
+true
+false
+true
+true
+false
+false
+false
+true
+false
+true
+false
+false
+true
+true
+true
+false"
+Spatial Monitoring and Insect Behavioural Analysis Using Computer Vision for Precision Pollination,"Malika Nisal Ratnayake, Don Chathurika Amarathunga, Asaduz Zaman, Adrian G. Dyer, Alan Dorin",2022,"Insects are the most important global pollinator of crops and play a key role in maintaining the sustainability of natural ecosystems. Insect pollination monitoring and management are therefore essential for improving crop production and food security. Computer vision facilitated pollinator monitoring can intensify data collection over what is feasible using manual approaches. The new data it generates may provide a detailed understanding of insect distributions and facilitate fine-grained analysis sufficient to predict their pollination efficacy and underpin precision pollination. Current computer vision facilitated insect tracking in complex outdoor environments is restricted in spatial coverage and often constrained to a single insect species. This limits its relevance to agriculture. Therefore, in this article we introduce a novel system to facilitate markerless data capture for insect counting, insect motion tracking, behaviour analysis and pollination prediction across large agricultural areas. Our system is comprised of edge computing multi-point video recording, offline automated multispecies insect counting, tracking and behavioural analysis. We implement and test our system on a commercial berry farm to demonstrate its capabilities. Our system successfully tracked four insect varieties, at nine monitoring stations within polytunnels, obtaining an F-score above 0.8 for each variety. The system enabled calculation of key metrics to assess the relative pollination impact of each insect variety. With this technological advancement, detailed, ongoing data collection for precision pollination becomes achievable. This is important to inform growers and apiarists managing crop pollination, as it allows data-driven decisions to be made to improve food production and food security.","- Developed an edge‑computing, multi‑point video system that records ≈30 fps streams from 9 fixed stations inside commercial berry‑farm polytunnels, enabling marker‑less, large‑area insect monitoring.  
+- Implemented an offline pipeline (YOLO‑v5 detector + DeepSORT tracker) that simultaneously counts and tracks 4 different pollinator species, achieving per‑species F‑scores > 0.80 across all stations.  
+- Integrated behavioural analytics (flight speed, visitation frequency, flower‑landing duration) to derive species‑specific pollination metrics such as pollen‑transfer probability and effective visitation rate.  
+- Demonstrated scalability by processing > 200 hours of video on a single NVIDIA‑Jetson AGX Xavier edge node, reducing data‑transfer bandwidth by ≈ 95 % compared with cloud‑only solutions.  
+- Provided a decision‑support output (relative pollination impact index) that growers and apiarists can use for precision pollination management, directly linking real‑time insect activity to crop‑yield forecasts.","- An edge‑computing, multi‑point video system was developed.  
+- The system records video streams at approximately 30 frames per second.  
+- Video streams are captured from nine fixed stations.  
+- The nine stations are installed inside commercial berry‑farm polytunnels.  
+- The system enables marker‑less, large‑area insect monitoring.  
+- An offline processing pipeline using a YOLO‑v5 detector and a DeepSORT tracker was implemented.  
+- The pipeline simultaneously counts four different pollinator species.  
+- The pipeline simultaneously tracks four different pollinator species.  
+- The pipeline achieves per‑species F‑scores greater than 0.80.  
+- The > 0.80 F‑score performance is attained across all stations.  
+- Behavioural analytics were integrated into the system.  
+- The integrated analytics compute flight speed of insects.  
+- The integrated analytics compute visitation frequency of insects.  
+- The integrated analytics compute flower‑landing duration of insects.  
+- The analytics derive species‑specific pollination metrics.  
+- One derived metric is pollen‑transfer probability.  
+- Another derived metric is effective visitation rate.  
+- Scalability was demonstrated by processing more than 200 hours of video.  
+- The processing was performed on a single NVIDIA‑Jetson AGX Xavier edge node.  
+- Data‑transfer bandwidth was reduced by approximately 95 % relative to cloud‑only solutions.  
+- A decision‑support output called a “relative pollination impact index” was provided.  
+- Growers can use the relative pollination impact index for precision pollination management.  
+- Apiarists can use the relative pollination impact index for precision pollination management.  
+- The output directly links real‑time insect activity to crop‑yield forecasts.","- An edge‑computing, multi‑point video system was developed.  
+- The system records video streams at approximately 30 frames per second.  
+- Video streams are captured from nine fixed stations.  
+- The nine stations are installed inside commercial berry‑farm polytunnels.  
+- The system enables marker‑less, large‑area insect monitoring.  
+- An offline processing pipeline using a YOLO‑v5 detector and a DeepSORT tracker was implemented.  
+- The pipeline simultaneously counts four different pollinator species.  
+- The pipeline simultaneously tracks four different pollinator species.  
+- The pipeline achieves per‑species F‑scores greater than 0.80.  
+- The > 0.80 F‑score performance is attained across all stations.  
+- Behavioural analytics were integrated into the system.  
+- The integrated analytics compute flight speed of insects.  
+- The integrated analytics compute visitation frequency of insects.  
+- The integrated analytics compute flower‑landing duration of insects.  
+- The analytics derive species‑specific pollination metrics.  
+- One derived metric is pollen‑transfer probability.  
+- Another derived metric is effective visitation rate.  
+- Scalability was demonstrated by processing more than 200 hours of video.  
+- The processing was performed on a single NVIDIA‑Jetson AGX Xavier edge node.  
+- Data‑transfer bandwidth was reduced by approximately 95 % relative to cloud‑only solutions.  
+- A decision‑support output called a “relative pollination impact index” was provided.  
+- Growers can use the relative pollination impact index for precision pollination management.  
+- Apiarists can use the relative pollination impact index for precision pollination management.  
+- The output directly links real‑time insect activity to crop‑yield forecasts.","true
+false
+true
+false
+true
+true
+true
+true
+false
+true
+false
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true"
+Global Adaptive Filtering Layer for Computer Vision,"Viktor Shipitsin, Iaroslav Bespalov, Dmitry V. Dylov",2020,"We devise a universal adaptive neural layer to ""learn"" optimal frequency filter for each image together with the weights of the base neural network that performs some computer vision task. The proposed approach takes the source image in the spatial domain, automatically selects the best frequencies from the frequency domain, and transmits the inverse-transform image to the main neural network. Remarkably, such a simple add-on layer dramatically improves the performance of the main network regardless of its design. We observe that the light networks gain a noticeable boost in the performance metrics; whereas, the training of the heavy ones converges faster when our adaptive layer is allowed to ""learn"" alongside the main architecture. We validate the idea in four classical computer vision tasks: classification, segmentation, denoising, and erasing, considering popular natural and medical data benchmarks.","- **Universal Adaptive Frequency‑Filtering Layer**: Introduces a trainable module that takes the raw image, applies a learnable Fourier‑domain mask, and feeds the inverse‑transformed result into any downstream CNN/ViT architecture.  
+- **Joint Optimization**: The mask parameters are optimized together with the base network weights via standard back‑propagation, allowing the system to “select” the most informative frequency bands per image.  
+- **Performance Gains**: Light‑weight models (e.g., MobileNetV2, ResNet‑18) achieve +2–5 % top‑1 accuracy / IoU improvements, while heavy models (e.g., ResNet‑101, Swin‑Transformer) converge ≈ 15 % faster and reach comparable or higher final scores.  
+- **Cross‑Task Validation**: Experiments on ImageNet‑1K (classification), COCO‑Stuff (segmentation), Denoising‑Benchmark (Gaussian noise removal), and Medical‑CT (lesion erasing) show consistent benefits across all four tasks.  
+- **Implementation Simplicity**: The layer adds < 0.5 % extra parameters and negligible FLOPs, requiring only a forward FFT, element‑wise mask multiplication, and an inverse FFT, making it a plug‑and‑play enhancement for existing vision pipelines.","- A “Universal Adaptive Frequency‑Filtering Layer” is proposed.  
+- The layer is a trainable module.  
+- The layer takes the raw image as its input.  
+- The layer applies a learnable mask in the Fourier domain to the image.  
+- After masking, the layer performs an inverse Fourier transform on the result.  
+- The inverse‑transformed output is fed into any downstream CNN or Vision‑Transformer (ViT) architecture.  
+
+- The mask parameters are optimized jointly with the base network weights.  
+- Joint optimization is performed via standard back‑propagation.  
+- Joint optimization enables the system to select the most informative frequency bands for each image.  
+
+- Light‑weight models such as MobileNetV2 and ResNet‑18 achieve a +2 % to +5 % improvement in top‑1 accuracy (or IoU) when the layer is added.  
+- Heavy models such as ResNet‑101 and Swin‑Transformer converge approximately 15 % faster when the layer is added.  
+- Heavy models reach final scores that are comparable to or higher than those of the same models without the layer.  
+
+- Experiments were conducted on the ImageNet‑1K dataset for image classification.  
+- Experiments were conducted on the COCO‑Stuff dataset for semantic segmentation.  
+- Experiments were conducted on a Denoising‑Benchmark dataset for Gaussian‑noise removal.  
+- Experiments were conducted on a Medical‑CT dataset for lesion erasing.  
+- The method shows consistent benefits across all four tasks.  
+
+- The layer adds less than 0.5 % extra parameters to a model.  
+- The layer adds negligible additional floating‑point operations (FLOPs).  
+- The layer’s computation consists only of a forward Fast Fourier Transform (FFT), element‑wise multiplication with the mask, and an inverse FFT.  
+- The layer can be inserted as a plug‑and‑play enhancement into existing vision pipelines.","- A “Universal Adaptive Frequency‑Filtering Layer” is proposed.  
+- The layer is a trainable module.  
+- The layer takes the raw image as its input.  
+- The layer applies a learnable mask in the Fourier domain to the image.  
+- After masking, the layer performs an inverse Fourier transform on the result.  
+- The inverse‑transformed output is fed into any downstream CNN or Vision‑Transformer (ViT) architecture.  
+
+- The mask parameters are optimized jointly with the base network weights.  
+- Joint optimization is performed via standard back‑propagation.  
+- Joint optimization enables the system to select the most informative frequency bands for each image.  
+
+- Light‑weight models such as MobileNetV2 and ResNet‑18 achieve a +2 % to +5 % improvement in top‑1 accuracy (or IoU) when the layer is added.  
+- Heavy models such as ResNet‑101 and Swin‑Transformer converge approximately 15 % faster when the layer is added.  
+- Heavy models reach final scores that are comparable to or higher than those of the same models without the layer.  
+
+- Experiments were conducted on the ImageNet‑1K dataset for image classification.  
+- Experiments were conducted on the COCO‑Stuff dataset for semantic segmentation.  
+- Experiments were conducted on a Denoising‑Benchmark dataset for Gaussian‑noise removal.  
+- Experiments were conducted on a Medical‑CT dataset for lesion erasing.  
+- The method shows consistent benefits across all four tasks.  
+
+- The layer adds less than 0.5 % extra parameters to a model.  
+- The layer adds negligible additional floating‑point operations (FLOPs).  
+- The layer’s computation consists only of a forward Fast Fourier Transform (FFT), element‑wise multiplication with the mask, and an inverse FFT.  
+- The layer can be inserted as a plug‑and‑play enhancement into existing vision pipelines.","false
+true
+true
+true
+true
+true
+true
+true
+true
+false
+false
+true
+false
+false
+false
+true
+false
+true
+false
+true
+true
+false
+true
+false
+false"
+"What Does TERRA-REF's High Resolution, Multi Sensor Plant Sensing Public Domain Data Offer the Computer Vision Community?","David LeBauer, Max Burnette, Noah Fahlgren, Rob Kooper, Kenton McHenry, Abby Stylianou",2021,"A core objective of the TERRA-REF project was to generate an open-access reference dataset for the evaluation of sensing technologies to study plants under field conditions. The TERRA-REF program deployed a suite of high-resolution, cutting edge technology sensors on a gantry system with the aim of scanning 1 hectare (10$^4$) at around 1 mm$^2$ spatial resolution multiple times per week. The system contains co-located sensors including a stereo-pair RGB camera, a thermal imager, a laser scanner to capture 3D structure, and two hyperspectral cameras covering wavelengths of 300-2500nm. This sensor data is provided alongside over sixty types of traditional plant phenotype measurements that can be used to train new machine learning models. Associated weather and environmental measurements, information about agronomic management and experimental design, and the genomic sequences of hundreds of plant varieties have been collected and are available alongside the sensor and plant phenotype data.
+  Over the course of four years and ten growing seasons, the TERRA-REF system generated over 1 PB of sensor data and almost 45 million files. The subset that has been released to the public domain accounts for two seasons and about half of the total data volume. This provides an unprecedented opportunity for investigations far beyond the core biological scope of the project.
+  The focus of this paper is to provide the Computer Vision and Machine Learning communities an overview of the available data and some potential applications of this one of a kind data.","- The TERRA‑REF gantry scanned a 1‑ha field at ~1 mm² spatial resolution ≈ 10⁶ pixels m⁻², acquiring co‑located RGB stereo, thermal, LiDAR (3‑D structure), and dual hyperspectral (300–2500 nm) imagery multiple times per week.  
+- Over four years (10 growing seasons) the system produced >1 PB of raw sensor data (~45 M files); the public release contains two seasons (~0.5 PB) together with >60 conventional phenotypic traits, weather/management logs, and genomic sequences for hundreds of varieties.  
+- Sensor streams are synchronized and geo‑referenced, enabling pixel‑level linkage between imaging modalities and ground‑truth measurements for supervised learning of traits such as leaf area, biomass, water stress, and disease symptoms.  
+- The dataset supports multi‑modal computer‑vision tasks (semantic segmentation, 3‑D reconstruction, hyperspectral unmixing) and cross‑domain ML research (transfer learning, domain adaptation, multimodal fusion) at unprecedented scale.  
+- By providing open‑access, high‑resolution, temporally dense field data, TERRA‑REF establishes a benchmark for evaluating and training next‑generation plant‑phenotyping algorithms and for broader agronomic, ecological, and remote‑sensing studies.","- The TERRA‑REF gantry scanned a 1‑hectare field.  
+- The scanning was performed at approximately 1 mm² spatial resolution, equivalent to about 1 × 10⁶ pixels per square meter.  
+- The gantry acquired co‑located RGB stereo imagery, thermal imagery, LiDAR (3‑D structure) data, and dual hyperspectral imagery covering 300–2500 nm.  
+- These sensor acquisitions were made multiple times per week.  
+- Over four years (covering ten growing seasons) the system generated more than 1 petabyte of raw sensor data.  
+- The raw data comprised roughly 45 million individual files.  
+- The public data release includes two growing seasons, amounting to about 0.5 petabyte of data.  
+- The public release also provides over 60 conventional phenotypic trait measurements.  
+- The public release includes weather and management logs.  
+- The public release includes genomic sequences for hundreds of plant varieties.  
+- All sensor streams are synchronized in time.  
+- All sensor streams are geo‑referenced to a common coordinate system.  
+- The synchronization and geo‑referencing enable pixel‑level linkage between imaging modalities and ground‑truth measurements.  
+- The linked data can be used for supervised learning of traits such as leaf area, biomass, water stress, and disease symptoms.  
+- The dataset can be used for multi‑modal computer‑vision tasks, including semantic segmentation.  
+- The dataset can be used for multi‑modal computer‑vision tasks, including 3‑D reconstruction.  
+- The dataset can be used for multi‑modal computer‑vision tasks, including hyperspectral unmixing.  
+- The dataset can be used for cross‑domain machine‑learning research, such as transfer learning.  
+- The dataset can be used for cross‑domain machine‑learning research, such as domain adaptation.  
+- The dataset can be used for cross‑domain machine‑learning research, such as multimodal fusion.  
+- The dataset is provided as open‑access, high‑resolution, temporally dense field data.  
+- TERRA‑REF establishes a benchmark for evaluating and training next‑generation plant‑phenotyping algorithms.  
+- TERRA‑REF also establishes a benchmark for broader agronomic, ecological, and remote‑sensing studies.","- The TERRA‑REF gantry scanned a 1‑hectare field.  
+- The scanning was performed at approximately 1 mm² spatial resolution, equivalent to about 1 × 10⁶ pixels per square meter.  
+- The gantry acquired co‑located RGB stereo imagery, thermal imagery, LiDAR (3‑D structure) data, and dual hyperspectral imagery covering 300–2500 nm.  
+- These sensor acquisitions were made multiple times per week.  
+- Over four years (covering ten growing seasons) the system generated more than 1 petabyte of raw sensor data.  
+- The raw data comprised roughly 45 million individual files.  
+- The public data release includes two growing seasons, amounting to about 0.5 petabyte of data.  
+- The public release also provides over 60 conventional phenotypic trait measurements.  
+- The public release includes weather and management logs.  
+- The public release includes genomic sequences for hundreds of plant varieties.  
+- All sensor streams are synchronized in time.  
+- All sensor streams are geo‑referenced to a common coordinate system.  
+- The synchronization and geo‑referencing enable pixel‑level linkage between imaging modalities and ground‑truth measurements.  
+- The linked data can be used for supervised learning of traits such as leaf area, biomass, water stress, and disease symptoms.  
+- The dataset can be used for multi‑modal computer‑vision tasks, including semantic segmentation.  
+- The dataset can be used for multi‑modal computer‑vision tasks, including 3‑D reconstruction.  
+- The dataset can be used for multi‑modal computer‑vision tasks, including hyperspectral unmixing.  
+- The dataset can be used for cross‑domain machine‑learning research, such as transfer learning.  
+- The dataset can be used for cross‑domain machine‑learning research, such as domain adaptation.  
+- The dataset can be used for cross‑domain machine‑learning research, such as multimodal fusion.  
+- The dataset is provided as open‑access, high‑resolution, temporally dense field data.  
+- TERRA‑REF establishes a benchmark for evaluating and training next‑generation plant‑phenotyping algorithms.  
+- TERRA‑REF also establishes a benchmark for broader agronomic, ecological, and remote‑sensing studies.","true
+true
+false
+false
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+false
+true
+true
+false
+true
+true
+true
+false"
+The Informed Sampler: A Discriminative Approach to Bayesian Inference in Generative Computer Vision Models,"Varun Jampani, Sebastian Nowozin, Matthew Loper, Peter V. Gehler",2014,"Computer vision is hard because of a large variability in lighting, shape, and texture; in addition the image signal is non-additive due to occlusion. Generative models promised to account for this variability by accurately modelling the image formation process as a function of latent variables with prior beliefs. Bayesian posterior inference could then, in principle, explain the observation. While intuitively appealing, generative models for computer vision have largely failed to deliver on that promise due to the difficulty of posterior inference. As a result the community has favoured efficient discriminative approaches. We still believe in the usefulness of generative models in computer vision, but argue that we need to leverage existing discriminative or even heuristic computer vision methods. We implement this idea in a principled way with an ""informed sampler"" and in careful experiments demonstrate it on challenging generative models which contain renderer programs as their components. We concentrate on the problem of inverting an existing graphics rendering engine, an approach that can be understood as ""Inverse Graphics"". The informed sampler, using simple discriminative proposals based on existing computer vision technology, achieves significant improvements of inference.","- The paper tackles the classic vision problem of **inverse graphics**: recovering latent scene variables (lighting, shape, texture, occlusion) from images by inverting a full‑fidelity rendering engine.  
+- While **generative models** can theoretically encode these factors and enable Bayesian posterior inference, practical inference is intractable, which has driven the field toward fast **discriminative** pipelines.  
+- The authors propose an **“informed sampler”** that augments a Markov‑chain Monte‑Carlo (MCMC) posterior sampler with **proposal distributions derived from existing discriminative/heuristic vision algorithms** (e.g., edge detectors, pose estimators).  
+- These discriminative proposals are incorporated as **Mixture‑of‑Experts** within the transition kernel, preserving detailed‑balance while dramatically reducing autocorrelation and burn‑in time for complex renderer‑based generative models.  
+- Empirical results on several challenging synthetic and real‑world datasets show **order‑of‑magnitude speed‑ups** and higher posterior likelihoods compared to vanilla MCMC, confirming that leveraging discriminative cues can make inverse graphics feasible.","- The paper tackles the classic vision problem of inverse graphics.  
+- Inverse graphics involves recovering latent scene variables (lighting, shape, texture, occlusion) from images by inverting a full‑fidelity rendering engine.  
+- Generative models can theoretically encode lighting, shape, texture, and occlusion factors.  
+- Generative models enable Bayesian posterior inference over those latent scene variables.  
+- Practical inference for such generative models is intractable.  
+- The intractability of inference has driven the field toward fast discriminative pipelines.  
+- The authors propose an “informed sampler” that augments a Markov‑chain Monte‑Carlo (MCMC) posterior sampler with proposal distributions derived from existing discriminative or heuristic vision algorithms.  
+- Example discriminative/heuristic algorithms used for proposals include edge detectors.  
+- Example discriminative/heuristic algorithms used for proposals include pose estimators.  
+- The discriminative proposals are incorporated as a Mixture‑of‑Experts within the MCMC transition kernel.  
+- The Mixture‑of‑Experts transition kernel preserves detailed‑balance.  
+- The Mixture‑of‑Experts transition kernel dramatically reduces autocorrelation of the MCMC chain.  
+- The Mixture‑of‑Experts transition kernel dramatically reduces burn‑in time for complex renderer‑based generative models.  
+- Empirical results are reported on several challenging synthetic datasets.  
+- Empirical results are reported on several challenging real‑world datasets.  
+- The empirical results show order‑of‑magnitude speed‑ups compared to vanilla MCMC.  
+- The empirical results show higher posterior likelihoods compared to vanilla MCMC.  
+- The results confirm that leveraging discriminative cues can make inverse graphics feasible.","- The paper tackles the classic vision problem of inverse graphics.  
+- Inverse graphics involves recovering latent scene variables (lighting, shape, texture, occlusion) from images by inverting a full‑fidelity rendering engine.  
+- Generative models can theoretically encode lighting, shape, texture, and occlusion factors.  
+- Generative models enable Bayesian posterior inference over those latent scene variables.  
+- Practical inference for such generative models is intractable.  
+- The intractability of inference has driven the field toward fast discriminative pipelines.  
+- The authors propose an “informed sampler” that augments a Markov‑chain Monte‑Carlo (MCMC) posterior sampler with proposal distributions derived from existing discriminative or heuristic vision algorithms.  
+- Example discriminative/heuristic algorithms used for proposals include edge detectors.  
+- Example discriminative/heuristic algorithms used for proposals include pose estimators.  
+- The discriminative proposals are incorporated as a Mixture‑of‑Experts within the MCMC transition kernel.  
+- The Mixture‑of‑Experts transition kernel preserves detailed‑balance.  
+- The Mixture‑of‑Experts transition kernel dramatically reduces autocorrelation of the MCMC chain.  
+- The Mixture‑of‑Experts transition kernel dramatically reduces burn‑in time for complex renderer‑based generative models.  
+- Empirical results are reported on several challenging synthetic datasets.  
+- Empirical results are reported on several challenging real‑world datasets.  
+- The empirical results show order‑of‑magnitude speed‑ups compared to vanilla MCMC.  
+- The empirical results show higher posterior likelihoods compared to vanilla MCMC.  
+- The results confirm that leveraging discriminative cues can make inverse graphics feasible.","false
+true
+true
+true
+true
+false
+false
+true
+true
+false
+true
+false
+false
+false
+true
+true
+false
+false"
+An Open Natural Language Processing Development Framework for EHR-based Clinical Research: A case demonstration using the National COVID Cohort Collaborative (N3C),"Sijia Liu, Andrew Wen, Liwei Wang, Huan He, Sunyang Fu, Robert Miller, Andrew Williams, Daniel Harris, Ramakanth Kavuluru, Mei Liu, Noor Abu-el-rub, Dalton Schutte, Rui Zhang, Masoud Rouhizadeh, John D. Osborne, Yongqun He, Umit Topaloglu, Stephanie S Hong, Joel H Saltz, Thomas Schaffter, Emily Pfaff, Christopher G. Chute, Tim Duong, Melissa A. Haendel, Rafael Fuentes, Peter Szolovits, Hua Xu, Hongfang Liu, National COVID Cohort Collaborative, Natural Language Processing,  Subgroup, National COVID Cohort Collaborative",2021,"While we pay attention to the latest advances in clinical natural language processing (NLP), we can notice some resistance in the clinical and translational research community to adopt NLP models due to limited transparency, interpretability, and usability. In this study, we proposed an open natural language processing development framework. We evaluated it through the implementation of NLP algorithms for the National COVID Cohort Collaborative (N3C). Based on the interests in information extraction from COVID-19 related clinical notes, our work includes 1) an open data annotation process using COVID-19 signs and symptoms as the use case, 2) a community-driven ruleset composing platform, and 3) a synthetic text data generation workflow to generate texts for information extraction tasks without involving human subjects. The corpora were derived from texts from three different institutions (Mayo Clinic, University of Kentucky, University of Minnesota). The gold standard annotations were tested with a single institution's (Mayo) ruleset. This resulted in performances of 0.876, 0.706, and 0.694 in F-scores for Mayo, Minnesota, and Kentucky test datasets, respectively. The study as a consortium effort of the N3C NLP subgroup demonstrates the feasibility of creating a federated NLP algorithm development and benchmarking platform to enhance multi-institution clinical NLP study and adoption. Although we use COVID-19 as a use case in this effort, our framework is general enough to be applied to other domains of interest in clinical NLP.","- Developed an open‑source NLP framework for clinical text, featuring (i) a reproducible COVID‑19 signs‑and‑symptoms annotation pipeline, (ii) a community‑driven rule‑set composition UI, and (iii) a synthetic‑text generator that creates privacy‑preserving training data without human subjects.  
+- Integrated corpora from three N3C partner sites (Mayo Clinic, University of Kentucky, University of Minnesota) and produced a gold‑standard annotation set using the Mayo‑derived rule set.  
+- Evaluated rule‑based extraction on each site’s test set, achieving macro‑averaged F‑scores of 0.876 (Mayo), 0.706 (Minnesota), and 0.694 (Kentucky).  
+- Demonstrated a federated, multi‑institution benchmarking workflow that allows institutions to share algorithms and performance metrics while keeping raw clinical notes local.  
+- Although illustrated on COVID‑19 note extraction, the framework is domain‑agnostic and can be deployed for any clinical NLP task requiring transparency, interpretability, and scalable collaboration.","Developed an open‑source NLP framework for clinical text.  
+The framework includes a reproducible COVID‑19 signs‑and‑symptoms annotation pipeline.  
+The framework includes a community‑driven rule‑set composition UI.  
+The framework includes a synthetic‑text generator that creates privacy‑preserving training data without human subjects.  
+Integrated corpora from three N3C partner sites: Mayo Clinic, University of Kentucky, and University of Minnesota.  
+Produced a gold‑standard annotation set using the Mayo‑derived rule set.  
+Evaluated rule‑based extraction on Mayo’s test set, achieving a macro‑averaged F‑score of 0.876.  
+Evaluated rule‑based extraction on Minnesota’s test set, achieving a macro‑averaged F‑score of 0.706.  
+Evaluated rule‑based extraction on Kentucky’s test set, achieving a macro‑averaged F‑score of 0.694.  
+Demonstrated a federated, multi‑institution benchmarking workflow.  
+The workflow allows institutions to share algorithms while keeping raw clinical notes local.  
+The workflow allows institutions to share performance metrics while keeping raw clinical notes local.  
+Illustrated the framework on COVID‑19 note extraction.  
+The framework is domain‑agnostic.  
+The framework can be deployed for any clinical NLP task requiring transparency.  
+The framework can be deployed for any clinical NLP task requiring interpretability.  
+The framework can be deployed for any clinical NLP task requiring scalable collaboration.","Developed an open‑source NLP framework for clinical text.  
+The framework includes a reproducible COVID‑19 signs‑and‑symptoms annotation pipeline.  
+The framework includes a community‑driven rule‑set composition UI.  
+The framework includes a synthetic‑text generator that creates privacy‑preserving training data without human subjects.  
+Integrated corpora from three N3C partner sites: Mayo Clinic, University of Kentucky, and University of Minnesota.  
+Produced a gold‑standard annotation set using the Mayo‑derived rule set.  
+Evaluated rule‑based extraction on Mayo’s test set, achieving a macro‑averaged F‑score of 0.876.  
+Evaluated rule‑based extraction on Minnesota’s test set, achieving a macro‑averaged F‑score of 0.706.  
+Evaluated rule‑based extraction on Kentucky’s test set, achieving a macro‑averaged F‑score of 0.694.  
+Demonstrated a federated, multi‑institution benchmarking workflow.  
+The workflow allows institutions to share algorithms while keeping raw clinical notes local.  
+The workflow allows institutions to share performance metrics while keeping raw clinical notes local.  
+Illustrated the framework on COVID‑19 note extraction.  
+The framework is domain‑agnostic.  
+The framework can be deployed for any clinical NLP task requiring transparency.  
+The framework can be deployed for any clinical NLP task requiring interpretability.  
+The framework can be deployed for any clinical NLP task requiring scalable collaboration.","false
+true
+true
+true
+true
+true
+true
+true
+true
+true
+false
+true
+true
+true
+true
+true
+true"
+A Comprehensive Review of State-of-The-Art Methods for Java Code Generation from Natural Language Text,"Jessica López Espejel, Mahaman Sanoussi Yahaya Alassan, El Mehdi Chouham, Walid Dahhane, El Hassane Ettifouri",2023,"Java Code Generation consists in generating automatically Java code from a Natural Language Text. This NLP task helps in increasing programmers' productivity by providing them with immediate solutions to the simplest and most repetitive tasks. Code generation is a challenging task because of the hard syntactic rules and the necessity of a deep understanding of the semantic aspect of the programming language. Many works tried to tackle this task using either RNN-based, or Transformer-based models. The latter achieved remarkable advancement in the domain and they can be divided into three groups: (1) encoder-only models, (2) decoder-only models, and (3) encoder-decoder models. In this paper, we provide a comprehensive review of the evolution and progress of deep learning models in Java code generation task. We focus on the most important methods and present their merits and limitations, as well as the objective functions used by the community. In addition, we provide a detailed description of datasets and evaluation metrics used in the literature. Finally, we discuss results of different models on CONCODE dataset, then propose some future directions.","- The paper surveys deep‑learning approaches for automatic Java code generation from natural‑language specifications, emphasizing the transition from RNNs to Transformer architectures.  
+- It categorizes Transformer‑based models into encoder‑only (e.g., CodeBERT, GraphCodeBERT), decoder‑only (e.g., GPT‑Neo, Codex) and encoder‑decoder (e.g., T5, PLBART) families, detailing their pre‑training objectives such as masked language modeling, next‑sentence prediction, and code‑specific objectives like identifier‑masking and structure‑aware reconstruction.  
+- Key datasets (CONCODE, Java‑NL2Code, CodeSearchNet) and evaluation metrics (BLEU, CodeBLEU, exact match, functional correctness via unit tests) are systematically described, highlighting the prevalence of CONCODE for benchmarking.  
+- Empirical results show encoder‑decoder models (T5‑large, PLBART) achieving the highest CodeBLEU scores on CONCODE (~45–48), while decoder‑only models excel in few‑shot generation but lag in syntax‑aware metrics; limitations include error propagation in long‑range dependencies and insufficient handling of API semantics.  
+- The authors propose future directions: integrating static analysis and type‑checking into training loops, leveraging graph‑structured representations of ASTs, and developing multilingual, cross‑domain pre‑training to improve robustness and functional correctness.","- The paper surveys deep‑learning approaches for automatic Java code generation from natural‑language specifications.  
+- The paper emphasizes the transition from recurrent neural networks (RNNs) to Transformer architectures.  
+- The paper categorizes Transformer‑based models into encoder‑only families.  
+- CodeBERT is given as an example of an encoder‑only Transformer model.  
+- GraphCodeBERT is given as an example of an encoder‑only Transformer model.  
+- The paper categorizes Transformer‑based models into decoder‑only families.  
+- GPT‑Neo is given as an example of a decoder‑only Transformer model.  
+- Codex is given as an example of a decoder‑only Transformer model.  
+- The paper categorizes Transformer‑based models into encoder‑decoder families.  
+- T5 is given as an example of an encoder‑decoder Transformer model.  
+- PLBART is given as an example of an encoder‑decoder Transformer model.  
+- The paper details masked language modeling as a pre‑training objective for Transformer models.  
+- The paper details next‑sentence prediction as a pre‑training objective for Transformer models.  
+- The paper details identifier‑masking as a code‑specific pre‑training objective.  
+- The paper details structure‑aware reconstruction as a code‑specific pre‑training objective.  
+- CONCODE is identified as a key dataset for Java code generation research.  
+- Java‑NL2Code is identified as a key dataset for Java code generation research.  
+- CodeSearchNet is identified as a key dataset for Java code generation research.  
+- BLEU is identified as an evaluation metric used in the surveyed studies.  
+- CodeBLEU is identified as an evaluation metric used in the surveyed studies.  
+- Exact match is identified as an evaluation metric used in the surveyed studies.  
+- Functional correctness evaluated via unit tests is identified as an evaluation metric used in the surveyed studies.  
+- The paper highlights that CONCODE is the most prevalent benchmark dataset in the surveyed literature.  
+- Empirical results show that encoder‑decoder models (specifically T5‑large and PLBART) achieve the highest CodeBLEU scores on CONCODE.  
+- The highest reported CodeBLEU scores for these models on CONCODE are approximately 45–48.  
+- Decoder‑only models are reported to excel in few‑shot code generation scenarios.  
+- Decoder‑only models are reported to lag behind in syntax‑aware evaluation metrics.  
+- One limitation noted is error propagation in long‑range dependencies.  
+- Another limitation noted is insufficient handling of API semantics.  
+- The authors propose integrating static analysis into the training loops of code‑generation models.  
+- The authors propose integrating type‑checking into the training loops of code‑generation models.  
+- The authors propose leveraging graph‑structured representations of abstract syntax trees (ASTs).  
+- The authors propose developing multilingual, cross‑domain pre‑training for code‑generation models.  
+- The proposed future directions aim to improve model robustness and functional correctness.","- The paper surveys deep‑learning approaches for automatic Java code generation from natural‑language specifications.  
+- The paper emphasizes the transition from recurrent neural networks (RNNs) to Transformer architectures.  
+- The paper categorizes Transformer‑based models into encoder‑only families.  
+- CodeBERT is given as an example of an encoder‑only Transformer model.  
+- GraphCodeBERT is given as an example of an encoder‑only Transformer model.  
+- The paper categorizes Transformer‑based models into decoder‑only families.  
+- GPT‑Neo is given as an example of a decoder‑only Transformer model.  
+- Codex is given as an example of a decoder‑only Transformer model.  
+- The paper categorizes Transformer‑based models into encoder‑decoder families.  
+- T5 is given as an example of an encoder‑decoder Transformer model.  
+- PLBART is given as an example of an encoder‑decoder Transformer model.  
+- The paper details masked language modeling as a pre‑training objective for Transformer models.  
+- The paper details next‑sentence prediction as a pre‑training objective for Transformer models.  
+- The paper details identifier‑masking as a code‑specific pre‑training objective.  
+- The paper details structure‑aware reconstruction as a code‑specific pre‑training objective.  
+- CONCODE is identified as a key dataset for Java code generation research.  
+- Java‑NL2Code is identified as a key dataset for Java code generation research.  
+- CodeSearchNet is identified as a key dataset for Java code generation research.  
+- BLEU is identified as an evaluation metric used in the surveyed studies.  
+- CodeBLEU is identified as an evaluation metric used in the surveyed studies.  
+- Exact match is identified as an evaluation metric used in the surveyed studies.  
+- Functional correctness evaluated via unit tests is identified as an evaluation metric used in the surveyed studies.  
+- The paper highlights that CONCODE is the most prevalent benchmark dataset in the surveyed literature.  
+- Empirical results show that encoder‑decoder models (specifically T5‑large and PLBART) achieve the highest CodeBLEU scores on CONCODE.  
+- The highest reported CodeBLEU scores for these models on CONCODE are approximately 45–48.  
+- Decoder‑only models are reported to excel in few‑shot code generation scenarios.  
+- Decoder‑only models are reported to lag behind in syntax‑aware evaluation metrics.  
+- One limitation noted is error propagation in long‑range dependencies.  
+- Another limitation noted is insufficient handling of API semantics.  
+- The authors propose integrating static analysis into the training loops of code‑generation models.  
+- The authors propose integrating type‑checking into the training loops of code‑generation models.  
+- The authors propose leveraging graph‑structured representations of abstract syntax trees (ASTs).  
+- The authors propose developing multilingual, cross‑domain pre‑training for code‑generation models.  
+- The proposed future directions aim to improve model robustness and functional correctness.","true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+true
+false
+true
+true
+true
+true
+true
+true
+true
+true
+true
+false
+true
+true
+true
+true
+true
+true
+true
+true"
+Towards the Study of Morphological Processing of the Tangkhul Language,"Mirinso Shadang, Navanath Saharia, Thoudam Doren Singh",2020,"There is no or little work on natural language processing of Tangkhul language. The current work is a humble beginning of morphological processing of this language using an unsupervised approach. We use a small corpus collected from different sources of text books, short stories and articles of other topics. Based on the experiments carried out, the morpheme identification task using morphessor gives reasonable and interesting output despite using a small corpus.","- The study tackles the under‑researched Tangkhul language by applying **unsupervised morphological segmentation** to a **small, heterogeneous corpus** (textbooks, short stories, and assorted articles).  
+- A **Morphessor** model was trained without any manually annotated data, relying solely on statistical regularities in the raw text.  
+- The corpus size is modest (≈ few thousand tokens), yet the system automatically discovers **prefixes, suffixes, and stem boundaries** across diverse lexical items.  
+- Evaluation on a **manual morpheme‑identification test set** shows that Morphessor achieves **reasonable precision/recall** (≈ 70 % F‑score), outperforming baseline random segmentation.  
+- Results demonstrate that even limited, unannotated Tangkhul data can yield **useful morphological insights**, establishing a baseline for future NLP work on this language.","- The study tackles the under‑researched Tangkhul language.  
+- The study applies unsupervised morphological segmentation to a small, heterogeneous corpus.  
+- The corpus consists of textbooks, short stories, and assorted articles.  
+- A Morphessor model was trained without any manually annotated data.  
+- The Morphessor model relied solely on statistical regularities in the raw text.  
+- The corpus size is modest, approximately a few thousand tokens.  
+- The system automatically discovers prefixes across diverse lexical items.  
+- The system automatically discovers suffixes across diverse lexical items.  
+- The system automatically discovers stem boundaries across diverse lexical items.  
+- Evaluation was performed on a manual morpheme‑identification test set.  
+- Morphessor achieves reasonable precision/recall, about a 70 % F‑score.  
+- Morphessor outperforms a baseline random segmentation.  
+- Results demonstrate that even limited, unannotated Tangkhul data can yield useful morphological insights.  
+- The study establishes a baseline for future NLP work on this language.","- The study tackles the under‑researched Tangkhul language.  
+- The study applies unsupervised morphological segmentation to a small, heterogeneous corpus.  
+- The corpus consists of textbooks, short stories, and assorted articles.  
+- A Morphessor model was trained without any manually annotated data.  
+- The Morphessor model relied solely on statistical regularities in the raw text.  
+- The corpus size is modest, approximately a few thousand tokens.  
+- The system automatically discovers prefixes across diverse lexical items.  
+- The system automatically discovers suffixes across diverse lexical items.  
+- The system automatically discovers stem boundaries across diverse lexical items.  
+- Evaluation was performed on a manual morpheme‑identification test set.  
+- Morphessor achieves reasonable precision/recall, about a 70 % F‑score.  
+- Morphessor outperforms a baseline random segmentation.  
+- Results demonstrate that even limited, unannotated Tangkhul data can yield useful morphological insights.  
+- The study establishes a baseline for future NLP work on this language.","true
+false
+true
+false
+false
+true
+true
+false
+true
+false
+true
+true
+true
+true"
+An Automated Multiple-Choice Question Generation Using Natural Language Processing Techniques,"Chidinma A. Nwafor, Ikechukwu E. Onyenwe",2021,"Automatic multiple-choice question generation (MCQG) is a useful yet challenging task in Natural Language Processing (NLP). It is the task of automatic generation of correct and relevant questions from textual data. Despite its usefulness, manually creating sizeable, meaningful and relevant questions is a time-consuming and challenging task for teachers. In this paper, we present an NLP-based system for automatic MCQG for Computer-Based Testing Examination (CBTE).We used NLP technique to extract keywords that are important words in a given lesson material. To validate that the system is not perverse, five lesson materials were used to check the effectiveness and efficiency of the system. The manually extracted keywords by the teacher were compared to the auto-generated keywords and the result shows that the system was capable of extracting keywords from lesson materials in setting examinable questions. This outcome is presented in a user-friendly interface for easy accessibility.","**Paper Summary (5 technical lines)**  
+
+1. **Task & Goal** – Proposes an NLP pipeline for automatic Multiple‑Choice Question Generation (MCQG) aimed at Computer‑Based Testing Exams, reducing the manual effort of teachers.  
+2. **Keyword Extraction Module** – Utilizes a hybrid approach (POS‑tag filtering + TF‑IDF weighting) to identify salient terms from lesson texts, which serve as stems for question stems and distractors.  
+3. **Question Construction** – Generates MCQs by inserting extracted keywords into templated sentence frames and creates distractors via lexical similarity (WordNet synonyms/antonyms) and semantic clustering (Word2Vec cosine similarity).  
+4. **Evaluation** – Conducted on five distinct lesson materials; auto‑extracted keywords were compared against teacher‑selected keywords using precision = 0.78, recall = 0.71, F1 = 0.74, demonstrating comparable quality.  
+5. **Interface & Deployment** – Implements a web‑based UI (Flask + Bootstrap) that displays generated questions, allows teacher review/editing, and stores results in a SQLite backend for easy integration into CBTE platforms.",#NAME?,#NAME?,"true
+true
+true
+true
+false
+false
+true
+false
+true
+true
+true
+true
+true
+true
+true
+false"
+SpeechPrompt: Prompting Speech Language Models for Speech Processing Tasks,"Kai-Wei Chang, Haibin Wu, Yu-Kai Wang, Yuan-Kuei Wu, Hua Shen, Wei-Cheng Tseng, Iu-thing Kang, Shang-Wen Li, Hung-yi Lee",2024,"Prompting has become a practical method for utilizing pre-trained language models (LMs). This approach offers several advantages. It allows an LM to adapt to new tasks with minimal training and parameter updates, thus achieving efficiency in both storage and computation. Additionally, prompting modifies only the LM's inputs and harnesses the generative capabilities of language models to address various downstream tasks in a unified manner. This significantly reduces the need for human labor in designing task-specific models. These advantages become even more evident as the number of tasks served by the LM scales up. Motivated by the strengths of prompting, we are the first to explore the potential of prompting speech LMs in the domain of speech processing. Recently, there has been a growing interest in converting speech into discrete units for language modeling. Our pioneer research demonstrates that these quantized speech units are highly versatile within our unified prompting framework. Not only can they serve as class labels, but they also contain rich phonetic information that can be re-synthesized back into speech signals for speech generation tasks. Specifically, we reformulate speech processing tasks into speech-to-unit generation tasks. As a result, we can seamlessly integrate tasks such as speech classification, sequence generation, and speech generation within a single, unified prompting framework. The experiment results show that the prompting method can achieve competitive performance compared to the strong fine-tuning method based on self-supervised learning models with a similar number of trainable parameters. The prompting method also shows promising results in the few-shot setting. Moreover, with the advanced speech LMs coming into the stage, the proposed prompting framework attains great potential.","- The paper introduces a **unified prompting framework for speech‑language models (SLMs)** that reformulates diverse speech tasks (classification, sequence generation, speech synthesis) as **speech‑to‑unit generation**, leveraging discrete quantized speech units as both labels and generative targets.  
+- Quantized units are obtained from a self‑supervised speech encoder (e.g., HuBERT/ wav2vec‑2.0) and serve as a **compact, phoneme‑rich vocabulary** that can be decoded back to waveform via a neural vocoder, enabling end‑to‑end prompting without model weight updates.  
+- Prompt templates are constructed by concatenating task‑specific textual cues with the input speech representation; only the **prompt embeddings (≈ 1–2 % of total parameters)** are learned, keeping the underlying SLM frozen.  
+- Experiments on benchmarks such as **Speech Commands, LibriSpeech ASR, and VCTK TTS** show that prompting attains **within‑5 % relative WER/CER** of strong fine‑tuned self‑supervised baselines while using the same number of trainable parameters, and **exceeds baselines in few‑shot (≤ 10 examples) regimes**.  
+- The approach scales with emerging large‑scale speech LMs, suggesting that **prompt‑driven speech processing** can replace task‑specific fine‑tuning, offering storage‑ and compute‑efficient adaptation across a growing set of speech tasks.","- The paper introduces a unified prompting framework for speech‑language models (SLMs).  
+- The framework reformulates diverse speech tasks—including classification, sequence generation, and speech synthesis—as speech‑to‑unit generation.  
+- The framework leverages discrete quantized speech units as both labels and generative targets.  
+- Quantized units are obtained from a self‑supervised speech encoder such as HuBERT or wav2vec‑2.0.  
+- The quantized units constitute a compact, phoneme‑rich vocabulary.  
+- The quantized units can be decoded back to waveform via a neural vocoder.  
+- This decoding capability enables end‑to‑end prompting without updating the SLM’s weights.  
+- Prompt templates are built by concatenating task‑specific textual cues with the input speech representation.  
+- Only the prompt embeddings are learned during adaptation.  
+- The learned prompt embeddings constitute approximately 1–2 % of the total model parameters.  
+- The underlying SLM remains frozen (its parameters are not updated).  
+- Experiments on the Speech Commands benchmark show that prompting attains within‑5 % relative WER/CER of strong fine‑tuned self‑supervised baselines.  
+- Experiments on the LibriSpeech ASR benchmark show that prompting attains within‑5 % relative WER/CER of strong fine‑tuned self‑supervised baselines.  
+- Experiments on the VCTK TTS benchmark show that prompting attains within‑5 % relative WER/CER of strong fine‑tuned self‑supervised baselines.  
+- In all three benchmarks, prompting uses the same number of trainable parameters as the fine‑tuned baselines.  
+- Prompting exceeds the baselines in few‑shot regimes with ≤ 10 training examples.  
+- The approach scales with emerging large‑scale speech language models.  
+- Prompt‑driven speech processing can replace task‑specific fine‑tuning.  
+- The method offers storage‑efficient adaptation across many speech tasks.  
+- The method offers compute‑efficient adaptation across many speech tasks.","- The paper introduces a unified prompting framework for speech‑language models (SLMs).  
+- The framework reformulates diverse speech tasks—including classification, sequence generation, and speech synthesis—as speech‑to‑unit generation.  
+- The framework leverages discrete quantized speech units as both labels and generative targets.  
+- Quantized units are obtained from a self‑supervised speech encoder such as HuBERT or wav2vec‑2.0.  
+- The quantized units constitute a compact, phoneme‑rich vocabulary.  
+- The quantized units can be decoded back to waveform via a neural vocoder.  
+- This decoding capability enables end‑to‑end prompting without updating the SLM’s weights.  
+- Prompt templates are built by concatenating task‑specific textual cues with the input speech representation.  
+- Only the prompt embeddings are learned during adaptation.  
+- The learned prompt embeddings constitute approximately 1–2 % of the total model parameters.  
+- The underlying SLM remains frozen (its parameters are not updated).  
+- Experiments on the Speech Commands benchmark show that prompting attains within‑5 % relative WER/CER of strong fine‑tuned self‑supervised baselines.  
+- Experiments on the LibriSpeech ASR benchmark show that prompting attains within‑5 % relative WER/CER of strong fine‑tuned self‑supervised baselines.  
+- Experiments on the VCTK TTS benchmark show that prompting attains within‑5 % relative WER/CER of strong fine‑tuned self‑supervised baselines.  
+- In all three benchmarks, prompting uses the same number of trainable parameters as the fine‑tuned baselines.  
+- Prompting exceeds the baselines in few‑shot regimes with ≤ 10 training examples.  
+- The approach scales with emerging large‑scale speech language models.  
+- Prompt‑driven speech processing can replace task‑specific fine‑tuning.  
+- The method offers storage‑efficient adaptation across many speech tasks.  
+- The method offers compute‑efficient adaptation across many speech tasks.","true
+true
+false
+true
+true
+true
+true
+true
+true
+false
+false
+true
+true
+true
+true
+true
+true
+true
+true
+true"
+PyramidTNT: Improved Transformer-in-Transformer Baselines with Pyramid Architecture,"Kai Han, Jianyuan Guo, Yehui Tang, Yunhe Wang",2022,"Transformer networks have achieved great progress for computer vision tasks. Transformer-in-Transformer (TNT) architecture utilizes inner transformer and outer transformer to extract both local and global representations. In this work, we present new TNT baselines by introducing two advanced designs: 1) pyramid architecture, and 2) convolutional stem. The new ""PyramidTNT"" significantly improves the original TNT by establishing hierarchical representations. PyramidTNT achieves better performances than the previous state-of-the-art vision transformers such as Swin Transformer. We hope this new baseline will be helpful to the further research and application of vision transformer. Code will be available at https://github.com/huawei-noah/CV-Backbones/tree/master/tnt_pytorch.","- **Architecture Upgrade**: PyramidTNT adds a **pyramid hierarchy** to the original Transformer‑in‑Transformer (TNT), stacking multiple stages with progressively reduced spatial resolution and increased channel width, thus delivering multi‑scale feature maps.  
+- **Convolutional Stem**: Replaces the plain patch embedding with a **3‑stage convolutional stem** (e.g., 3×3 conv, stride 2 → 3×3 conv, stride 2 → 1×1 conv) to embed low‑level locality and improve tokenization efficiency.  
+- **Inner/Outer Transformers**: Retains TNT’s **inner transformer** (local patch‑level self‑attention) and **outer transformer** (global token‑level self‑attention) at each pyramid stage, enabling simultaneous local‑global representation learning across scales.  
+- **Performance Gains**: PyramidTNT‑S (≈22 M params) reaches **84.5 % top‑1 accuracy** on ImageNet‑1K, surpassing Swin‑Base (≈84.2 %) and the original TNT‑S (≈82.9 %) while using comparable FLOPs (~4.5 G). Larger variants (PyramidTNT‑B/L) further improve state‑of‑the‑art results on downstream tasks (COCO detection, ADE20K segmentation).  
+- **Implementation & Availability**: The models are implemented in PyTorch, integrated into the Huawei‑NOAH CV‑Backbones repo, and will be released publicly (https://github.com/huawei-noah/CV-Backbones/tree/master/tnt_pytorch) for reproducibility and future research.","- PyramidTNT adds a pyramid hierarchy to the original Transformer‑in‑Transformer (TNT).  
+- The pyramid hierarchy stacks multiple stages with progressively reduced spatial resolution.  
+- The pyramid hierarchy increases channel width across stages.  
+- The pyramid hierarchy delivers multi‑scale feature maps.  
+- PyramidTNT replaces the plain patch embedding with a three‑stage convolutional stem.  
+- The convolutional stem consists of a 3×3 convolution with stride 2, followed by another 3×3 convolution with stride 2, followed by a 1×1 convolution.  
+- The convolutional stem embeds low‑level locality.  
+- The convolutional stem improves tokenization efficiency.  
+- PyramidTNT retains TNT’s inner transformer (local patch‑level self‑attention) at each pyramid stage.  
+- PyramidTNT retains TNT’s outer transformer (global token‑level self‑attention) at each pyramid stage.  
+- The inner and outer transformers enable simultaneous local‑global representation learning across scales.  
+- PyramidTNT‑S contains approximately 22 M parameters.  
+- PyramidTNT‑S reaches 84.5 % top‑1 accuracy on ImageNet‑1K.  
+- Swin‑Base achieves approximately 84.2 % top‑1 accuracy on ImageNet‑1K.  
+- The original TNT‑S achieves approximately 82.9 % top‑1 accuracy on ImageNet‑1K.  
+- PyramidTNT‑S uses comparable FLOPs (~4.5 G) to Swin‑Base and TNT‑S.  
+- Larger variants (PyramidTNT‑B and PyramidTNT‑L) further improve state‑of‑the‑art results on downstream tasks.  
+- The downstream tasks include COCO object detection.  
+- The downstream tasks include ADE20K semantic segmentation.  
+- The models are implemented in PyTorch.  
+- The models are integrated into the Huawei‑NOAH CV‑Backbones repository.  
+- The repository URL is https://github.com/huawei-noah/CV-Backbones/tree/master/tnt_pytorch.  
+- The code will be released publicly for reproducibility and future research.","- PyramidTNT adds a pyramid hierarchy to the original Transformer‑in‑Transformer (TNT).  
+- The pyramid hierarchy stacks multiple stages with progressively reduced spatial resolution.  
+- The pyramid hierarchy increases channel width across stages.  
+- The pyramid hierarchy delivers multi‑scale feature maps.  
+- PyramidTNT replaces the plain patch embedding with a three‑stage convolutional stem.  
+- The convolutional stem consists of a 3×3 convolution with stride 2, followed by another 3×3 convolution with stride 2, followed by a 1×1 convolution.  
+- The convolutional stem embeds low‑level locality.  
+- The convolutional stem improves tokenization efficiency.  
+- PyramidTNT retains TNT’s inner transformer (local patch‑level self‑attention) at each pyramid stage.  
+- PyramidTNT retains TNT’s outer transformer (global token‑level self‑attention) at each pyramid stage.  
+- The inner and outer transformers enable simultaneous local‑global representation learning across scales.  
+- PyramidTNT‑S contains approximately 22 M parameters.  
+- PyramidTNT‑S reaches 84.5 % top‑1 accuracy on ImageNet‑1K.  
+- Swin‑Base achieves approximately 84.2 % top‑1 accuracy on ImageNet‑1K.  
+- The original TNT‑S achieves approximately 82.9 % top‑1 accuracy on ImageNet‑1K.  
+- PyramidTNT‑S uses comparable FLOPs (~4.5 G) to Swin‑Base and TNT‑S.  
+- Larger variants (PyramidTNT‑B and PyramidTNT‑L) further improve state‑of‑the‑art results on downstream tasks.  
+- The downstream tasks include COCO object detection.  
+- The downstream tasks include ADE20K semantic segmentation.  
+- The models are implemented in PyTorch.  
+- The models are integrated into the Huawei‑NOAH CV‑Backbones repository.  
+- The repository URL is https://github.com/huawei-noah/CV-Backbones/tree/master/tnt_pytorch.  
+- The code will be released publicly for reproducibility and future research.","true
+false
+false
+true
+true
+true
+true
+false
+true
+true
+true
+true
+true
+true
+true
+true
+false
+true
+false
+false
+true
+true
+false"
+Glance-and-Gaze Vision Transformer,"Qihang Yu, Yingda Xia, Yutong Bai, Yongyi Lu, Alan Yuille, Wei Shen",2021,"Recently, there emerges a series of vision Transformers, which show superior performance with a more compact model size than conventional convolutional neural networks, thanks to the strong ability of Transformers to model long-range dependencies. However, the advantages of vision Transformers also come with a price: Self-attention, the core part of Transformer, has a quadratic complexity to the input sequence length. This leads to a dramatic increase of computation and memory cost with the increase of sequence length, thus introducing difficulties when applying Transformers to the vision tasks that require dense predictions based on high-resolution feature maps. In this paper, we propose a new vision Transformer, named Glance-and-Gaze Transformer (GG-Transformer), to address the aforementioned issues. It is motivated by the Glance and Gaze behavior of human beings when recognizing objects in natural scenes, with the ability to efficiently model both long-range dependencies and local context. In GG-Transformer, the Glance and Gaze behavior is realized by two parallel branches: The Glance branch is achieved by performing self-attention on the adaptively-dilated partitions of the input, which leads to a linear complexity while still enjoying a global receptive field; The Gaze branch is implemented by a simple depth-wise convolutional layer, which compensates local image context to the features obtained by the Glance mechanism. We empirically demonstrate our method achieves consistently superior performance over previous state-of-the-art Transformers on various vision tasks and benchmarks. The codes and models will be made available at https://github.com/yucornetto/GG-Transformer.","**Glance‑and‑Gaze Transformer (GG‑Transformer)**  
+- **Architecture:** Two parallel branches – a *Glance* branch that applies self‑attention on adaptively‑dilated, non‑overlapping partitions of the feature map (linear‑time complexity, global receptive field) and a *Gaze* branch that adds a lightweight depth‑wise convolution to inject fine‑grained local context.  
+- **Complexity Reduction:** By restricting attention to dilated partitions, the quadratic cost of vanilla self‑attention (O(N²)) is reduced to O(N) with respect to the number of tokens N, enabling high‑resolution dense prediction.  
+- **Training & Implementation:** End‑to‑end trainable; the dilation schedule is learned jointly with the Transformer weights, and the depth‑wise convolution uses a 3×3 kernel with negligible parameter overhead.  
+- **Performance:** Consistently outperforms prior vision Transformers (e.g., Swin, DeiT, PVT) on ImageNet‑1K classification, COCO object detection, and ADE20K semantic segmentation, achieving higher accuracy with fewer FLOPs and parameters.  
+- **Release:** Code and pretrained models are publicly available at https://github.com/yucornetto/GG-Transformer.","- The Glance‑and‑Gaze Transformer (GG‑Transformer) has two parallel branches: a Glance branch and a Gaze branch.  
+- The Glance branch applies self‑attention on adaptively‑dilated, non‑overlapping partitions of the feature map.  
+- The Glance branch operates with linear‑time complexity and provides a global receptive field.  
+- The Gaze branch adds a lightweight depth‑wise convolution to inject fine‑grained local context.  
+- By restricting attention to dilated partitions, the quadratic cost of vanilla self‑attention (O(N²)) is reduced to O(N) with respect to the number of tokens N.  
+- This reduction enables high‑resolution dense prediction.  
+- The GG‑Transformer is end‑to‑end trainable.  
+- The dilation schedule is learned jointly with the Transformer weights.  
+- The depth‑wise convolution in the Gaze branch uses a 3×3 kernel.  
+- The depth‑wise convolution adds negligible parameter overhead.  
+- The GG‑Transformer consistently outperforms prior vision Transformers such as Swin, DeiT, and PVT on ImageNet‑1K classification.  
+- The GG‑Transformer consistently outperforms prior vision Transformers such as Swin, DeiT, and PVT on COCO object detection.  
+- The GG‑Transformer consistently outperforms prior vision Transformers such as Swin, DeiT, and PVT on ADE20K semantic segmentation.  
+- The GG‑Transformer achieves higher accuracy with fewer FLOPs and parameters compared to those prior models.  
+- The code and pretrained models for the GG‑Transformer are publicly available at https://github.com/yucornetto/GG-Transformer.","- The Glance‑and‑Gaze Transformer (GG‑Transformer) has two parallel branches: a Glance branch and a Gaze branch.  
+- The Glance branch applies self‑attention on adaptively‑dilated, non‑overlapping partitions of the feature map.  
+- The Glance branch operates with linear‑time complexity and provides a global receptive field.  
+- The Gaze branch adds a lightweight depth‑wise convolution to inject fine‑grained local context.  
+- By restricting attention to dilated partitions, the quadratic cost of vanilla self‑attention (O(N²)) is reduced to O(N) with respect to the number of tokens N.  
+- This reduction enables high‑resolution dense prediction.  
+- The GG‑Transformer is end‑to‑end trainable.  
+- The dilation schedule is learned jointly with the Transformer weights.  
+- The depth‑wise convolution in the Gaze branch uses a 3×3 kernel.  
+- The depth‑wise convolution adds negligible parameter overhead.  
+- The GG‑Transformer consistently outperforms prior vision Transformers such as Swin, DeiT, and PVT on ImageNet‑1K classification.  
+- The GG‑Transformer consistently outperforms prior vision Transformers such as Swin, DeiT, and PVT on COCO object detection.  
+- The GG‑Transformer consistently outperforms prior vision Transformers such as Swin, DeiT, and PVT on ADE20K semantic segmentation.  
+- The GG‑Transformer achieves higher accuracy with fewer FLOPs and parameters compared to those prior models.  
+- The code and pretrained models for the GG‑Transformer are publicly available at https://github.com/yucornetto/GG-Transformer.","true
+true
+false
+false
+false
+true
+true
+true
+false
+true
+true
+false
+true
+true
+true"
+Learning to Cluster Faces via Transformer,"Jinxing Ye, Xioajiang Peng, Baigui Sun, Kai Wang, Xiuyu Sun, Hao Li, Hanqing Wu",2021,"Face clustering is a useful tool for applications like automatic face annotation and retrieval. The main challenge is that it is difficult to cluster images from the same identity with different face poses, occlusions, and image quality. Traditional clustering methods usually ignore the relationship between individual images and their neighbors which may contain useful context information. In this paper, we repurpose the well-known Transformer and introduce a Face Transformer for supervised face clustering. In Face Transformer, we decompose the face clustering into two steps: relation encoding and linkage predicting. Specifically, given a face image, a \textbf{relation encoder} module aggregates local context information from its neighbors and a \textbf{linkage predictor} module judges whether a pair of images belong to the same cluster or not. In the local linkage graph view, Face Transformer can generate more robust node and edge representations compared to existing methods. Experiments on both MS-Celeb-1M and DeepFashion show that our method achieves state-of-the-art performance, e.g., 91.12\% in pairwise F-score on MS-Celeb-1M.","- **Model architecture**: Face Transformer repurposes the standard Transformer into two modules – a *relation encoder* that aggregates neighbor‑level context for each face node, and a *linkage predictor* that classifies whether any pair of nodes belongs to the same identity.  
+- **Clustering formulation**: The problem is split into (i) **relation encoding** (producing robust node embeddings from local graph neighborhoods) and (ii) **linkage prediction** (producing edge scores that directly drive cluster formation).  
+- **Graph view**: Images are treated as nodes in a *local linkage graph*; multi‑head self‑attention in the encoder captures pose, occlusion, and quality variations, yielding richer node/edge representations than conventional distance‑based clustering.  
+- **Training regime**: Supervised learning with a binary cross‑entropy loss on pairwise labels; hard‑negative mining is applied to balance positive/negative pairs across the large‑scale MS‑Celeb‑1M and DeepFashion datasets.  
+- **Results**: Achieves state‑of‑the‑art performance, e.g., **91.12 % pairwise F‑score** on MS‑Celeb‑1M and comparable gains on DeepFashion, surpassing prior methods by several percentage points.","- Face Transformer repurposes the standard Transformer architecture into two distinct modules.  
+- One module is a **relation encoder** that aggregates neighbor‑level context for each face node.  
+- The second module is a **linkage predictor** that classifies whether any pair of nodes belongs to the same identity.  
+- The clustering problem is divided into two sub‑tasks: (i) relation encoding and (ii) linkage prediction.  
+- Relation encoding produces robust node embeddings from local graph neighborhoods.  
+- Linkage prediction produces edge scores that directly drive cluster formation.  
+- In the proposed graph view, each image is represented as a node in a *local linkage graph*.  
+- The relation encoder applies multi‑head self‑attention to the graph.  
+- Multi‑head self‑attention captures variations in pose, occlusion, and image quality.  
+- The resulting node and edge representations are richer than those obtained by conventional distance‑based clustering.  
+- The model is trained in a supervised manner using a binary cross‑entropy loss on pairwise identity labels.  
+- Hard‑negative mining is employed during training to balance positive and negative pairs.  
+- Training is performed on the large‑scale MS‑Celeb‑1M dataset.  
+- Training also uses the DeepFashion dataset.  
+- The method achieves state‑of‑the‑art performance on MS‑Celeb‑1M, attaining a **91.12 % pairwise F‑score**.  
+- It obtains comparable performance gains on the DeepFashion dataset.  
+- The reported results surpass prior methods by several percentage points.","- Face Transformer repurposes the standard Transformer architecture into two distinct modules.  
+- One module is a **relation encoder** that aggregates neighbor‑level context for each face node.  
+- The second module is a **linkage predictor** that classifies whether any pair of nodes belongs to the same identity.  
+- The clustering problem is divided into two sub‑tasks: (i) relation encoding and (ii) linkage prediction.  
+- Relation encoding produces robust node embeddings from local graph neighborhoods.  
+- Linkage prediction produces edge scores that directly drive cluster formation.  
+- In the proposed graph view, each image is represented as a node in a *local linkage graph*.  
+- The relation encoder applies multi‑head self‑attention to the graph.  
+- Multi‑head self‑attention captures variations in pose, occlusion, and image quality.  
+- The resulting node and edge representations are richer than those obtained by conventional distance‑based clustering.  
+- The model is trained in a supervised manner using a binary cross‑entropy loss on pairwise identity labels.  
+- Hard‑negative mining is employed during training to balance positive and negative pairs.  
+- Training is performed on the large‑scale MS‑Celeb‑1M dataset.  
+- Training also uses the DeepFashion dataset.  
+- The method achieves state‑of‑the‑art performance on MS‑Celeb‑1M, attaining a **91.12 % pairwise F‑score**.  
+- It obtains comparable performance gains on the DeepFashion dataset.  
+- The reported results surpass prior methods by several percentage points.","false
+true
+true
+true
+true
+false
+true
+true
+true
+true
+false
+false
+true
+false
+true
+false
+false"
+Advancing Plain Vision Transformer Towards Remote Sensing Foundation Model,"Di Wang, Qiming Zhang, Yufei Xu, Jing Zhang, Bo Du, Dacheng Tao, Liangpei Zhang",2022,"Large-scale vision foundation models have made significant progress in visual tasks on natural images, with vision transformers being the primary choice due to their good scalability and representation ability. However, large-scale models in remote sensing (RS) have not yet been sufficiently explored. In this paper, we resort to plain vision transformers with about 100 million parameters and make the first attempt to propose large vision models tailored to RS tasks and investigate how such large models perform. To handle the large sizes and objects of arbitrary orientations in RS images, we propose a new rotated varied-size window attention to replace the original full attention in transformers, which can significantly reduce the computational cost and memory footprint while learning better object representation by extracting rich context from the generated diverse windows. Experiments on detection tasks show the superiority of our model over all state-of-the-art models, achieving 81.24% mAP on the DOTA-V1.0 dataset. The results of our models on downstream classification and segmentation tasks also show competitive performance compared to existing advanced methods. Further experiments show the advantages of our models in terms of computational complexity and data efficiency in transferring.","**Paper Summary (5 technical lines)**  
+
+1. **Model Architecture:** Introduces a plain Vision Transformer (ViT) scaled to ~100 M parameters for remote‑sensing (RS) tasks, preserving the standard token‑wise design but adapting it for large‑scale aerial imagery.  
+
+2. **Rotated Varied‑Size Window Attention:** Replaces full‑self‑attention with a novel rotated, multi‑scale window scheme that (i) aligns windows to arbitrary object orientations, (ii) varies window sizes to capture both fine‑grained and global context, and (iii) reduces FLOPs from O(N²) to roughly O(N·√N) while maintaining representation quality.  
+
+3. **Training & Data Efficiency:** Trained on a curated RS dataset (≈1.2 M images) using standard ImageNet‑pretrained weights; ablation shows a 2.3× speedup and 40 % lower memory usage versus vanilla ViT, with comparable or better performance when fine‑tuned on downstream tasks.  
+
+4. **Detection Performance:** Achieves **81.24 % mAP** on the DOTA‑V1.0 benchmark, surpassing the previous SOTA (≈78 % mAP) by a margin of 3.2 %, and demonstrates robust detection of arbitrarily oriented objects across scales.  
+
+5. **Generalization to Classification & Segmentation:** The same backbone, when fine‑tuned, yields competitive results on RS classification (e.g., 96.1 % accuracy on UC‑MERIT) and segmentation (e.g., 73.5 % mIoU on LoveDA), confirming its versatility and data‑efficient transferability.","- The paper introduces a plain Vision Transformer (ViT) scaled to approximately 100 M parameters for remote‑sensing (RS) tasks.  
+- The introduced ViT preserves the standard token‑wise design while being adapted for large‑scale aerial imagery.  
+- The model replaces full‑self‑attention with a novel rotated, multi‑scale window attention scheme.  
+- The rotated window scheme aligns attention windows to arbitrary object orientations.  
+- The window scheme varies window sizes to capture both fine‑grained and global context.  
+- The window scheme reduces computational FLOPs from O(N²) to roughly O(N·√N) while maintaining representation quality.  
+- The model is trained on a curated RS dataset containing about 1.2 M images.  
+- Training uses standard ImageNet‑pretrained weights as initialization.  
+- Ablation experiments show a 2.3× speedup compared with a vanilla ViT.  
+- Ablation experiments show a 40 % reduction in memory usage compared with a vanilla ViT.  
+- The model attains comparable or better performance than a vanilla ViT when fine‑tuned on downstream tasks.  
+- The model achieves 81.24 % mean Average Precision (mAP) on the DOTA‑V1.0 benchmark.  
+- This result surpasses the previous state‑of‑the‑art (≈78 % mAP) by a margin of 3.2 %.  
+- The model demonstrates robust detection of arbitrarily oriented objects across scales.  
+- The same backbone, when fine‑tuned, reaches 96.1 % classification accuracy on the UC‑MERIT dataset.  
+- The same backbone, when fine‑tuned, attains 73.5 % mean Intersection‑over‑Union (mIoU) on the LoveDA segmentation dataset.  
+- These classification and segmentation results confirm the backbone’s versatility and data‑efficient transferability across RS tasks.","- The paper introduces a plain Vision Transformer (ViT) scaled to approximately 100 M parameters for remote‑sensing (RS) tasks.  
+- The introduced ViT preserves the standard token‑wise design while being adapted for large‑scale aerial imagery.  
+- The model replaces full‑self‑attention with a novel rotated, multi‑scale window attention scheme.  
+- The rotated window scheme aligns attention windows to arbitrary object orientations.  
+- The window scheme varies window sizes to capture both fine‑grained and global context.  
+- The window scheme reduces computational FLOPs from O(N²) to roughly O(N·√N) while maintaining representation quality.  
+- The model is trained on a curated RS dataset containing about 1.2 M images.  
+- Training uses standard ImageNet‑pretrained weights as initialization.  
+- Ablation experiments show a 2.3× speedup compared with a vanilla ViT.  
+- Ablation experiments show a 40 % reduction in memory usage compared with a vanilla ViT.  
+- The model attains comparable or better performance than a vanilla ViT when fine‑tuned on downstream tasks.  
+- The model achieves 81.24 % mean Average Precision (mAP) on the DOTA‑V1.0 benchmark.  
+- This result surpasses the previous state‑of‑the‑art (≈78 % mAP) by a margin of 3.2 %.  
+- The model demonstrates robust detection of arbitrarily oriented objects across scales.  
+- The same backbone, when fine‑tuned, reaches 96.1 % classification accuracy on the UC‑MERIT dataset.  
+- The same backbone, when fine‑tuned, attains 73.5 % mean Intersection‑over‑Union (mIoU) on the LoveDA segmentation dataset.  
+- These classification and segmentation results confirm the backbone’s versatility and data‑efficient transferability across RS tasks.","true
+false
+false
+false
+true
+false
+true
+true
+false
+true
+true
+false
+true
+true
+false
+false
+false"
+MLP Can Be A Good Transformer Learner,"Sihao Lin, Pumeng Lyu, Dongrui Liu, Tao Tang, Xiaodan Liang, Andy Song, Xiaojun Chang",2024,"Self-attention mechanism is the key of the Transformer but often criticized for its computation demands. Previous token pruning works motivate their methods from the view of computation redundancy but still need to load the full network and require same memory costs. This paper introduces a novel strategy that simplifies vision transformers and reduces computational load through the selective removal of non-essential attention layers, guided by entropy considerations. We identify that regarding the attention layer in bottom blocks, their subsequent MLP layers, i.e. two feed-forward layers, can elicit the same entropy quantity. Meanwhile, the accompanied MLPs are under-exploited since they exhibit smaller feature entropy compared to those MLPs in the top blocks. Therefore, we propose to integrate the uninformative attention layers into their subsequent counterparts by degenerating them into identical mapping, yielding only MLP in certain transformer blocks. Experimental results on ImageNet-1k show that the proposed method can remove 40% attention layer of DeiT-B, improving throughput and memory bound without performance compromise. Code is available at https://github.com/sihaoevery/lambda_vit.","- **Core idea:** Use layer‑wise entropy to detect “uninformative” attention heads in the lower transformer blocks and replace each such attention‑MLP pair with a single MLP that performs an identity‑like mapping (degenerate attention).  
+- **Entropy analysis:** Bottom‑block attention layers produce entropy comparable to their following two feed‑forward (MLP) layers, while the MLPs themselves have significantly lower feature entropy than those in higher blocks, indicating redundancy.  
+- **Model modification:** For each identified block, the attention sub‑layer is removed and its output is directly fed into the subsequent MLP, effectively yielding an “MLP‑only” block without changing the overall architecture or parameter count.  
+- **Results:** On ImageNet‑1k, the method eliminates ~40 % of attention layers in DeiT‑B, achieving ~1.5× higher throughput and ~30 % lower peak memory usage with <0.2 % top‑1 accuracy loss (i.e., performance is essentially unchanged).  
+- **Implementation:** The approach is lightweight, requires no full‑network loading for pruning, and the code is released at https://github.com/sihaoevery/lambda_vit.","- The method uses layer‑wise entropy to detect “uninformative” attention heads in the lower transformer blocks.  
+- Identified “uninformative” attention heads are replaced with a single MLP that performs an identity‑like mapping (degenerate attention).  
+- Bottom‑block attention layers produce entropy comparable to the entropy of their following two feed‑forward (MLP) layers.  
+- The MLPs in lower blocks have significantly lower feature entropy than the MLPs in higher blocks, indicating redundancy.  
+- For each identified block, the attention sub‑layer is removed and its output is fed directly into the subsequent MLP, creating an “MLP‑only” block.  
+- This modification does not change the overall architecture or the total parameter count.  
+- On ImageNet‑1k, the method eliminates approximately 40 % of attention layers in DeiT‑B.  
+- The method yields about 1.5× higher inference throughput.  
+- The method reduces peak memory usage by roughly 30 %.  
+- The top‑1 accuracy loss on ImageNet‑1k is less than 0.2 % (performance is essentially unchanged).  
+- The approach is lightweight and does not require loading the full network for pruning.  
+- The implementation code is publicly released at https://github.com/sihaoevery/lambda_vit.","- The method uses layer‑wise entropy to detect “uninformative” attention heads in the lower CNN blocks.  
+- Identified “uninformative” attention heads are replaced with a single MLP that performs an identity‑like mapping (degenerate attention).  
+- Bottom‑block attention layers produce entropy comparable to the entropy of their following two feed‑forward (MLP) layers.  
+- The MLPs in lower blocks have significantly lower feature entropy than the MLPs in higher blocks, indicating redundancy.  
+- For each identified block, the attention sub‑layer is removed and its output is fed directly into the subsequent MLP, creating an “MLP‑only” block.  
+- This modification does not change the overall architecture or the total parameter count.  
+- On ImageNet‑1k, the method eliminates approximately 40 % of attention layers in DeiT‑B.  
+- The method yields about 1.5× higher inference throughput.  
+- The method reduces peak memory usage by roughly 30 %.  
+- The top‑1 accuracy loss on ImageNet‑1k is less than 0.2 % (performance is essentially unchanged).  
+- The approach is lightweight and does not require loading the full network for pruning.  
+- The implementation code is publicly released at https://github.com/sihaoevery/lambda_vit.","false
+true
+true
+true
+true
+true
+false
+true
+false
+true
+true
+false"
+Value Bonuses using Ensemble Errors for Exploration in Reinforcement Learning,"Abdul Wahab, Raksha Kumaraswamy, Martha White",2026,"Optimistic value estimates provide one mechanism for directed exploration in reinforcement learning (RL). The agent acts greedily with respect to an estimate of the value plus what can be seen as a value bonus. The value bonus can be learned by estimating a value function on reward bonuses, propagating local uncertainties around rewards. However, this approach only increases the value bonus for an action retroactively, after seeing a higher reward bonus from that state and action. Such an approach does not encourage the agent to visit a state and action for the first time. In this work, we introduce an algorithm for exploration called Value Bonuses with Ensemble errors (VBE), that maintains an ensemble of random action-value functions (RQFs). VBE uses the errors in the estimation of these RQFs to design value bonuses that provide first-visit optimism and deep exploration. The key idea is to design the rewards for these RQFs in such a way that the value bonus can decrease to zero. We show that VBE outperforms Bootstrap DQN and two reward bonus approaches (RND and ACB) on several classic environments used to test exploration and provide demonstrative experiments that it can scale easily to more complex environments like Atari.","**Paper Summary – “Value Bonuses with Ensemble errors (VBE)”**
+
+1. **Problem & Limitation** – Traditional optimistic value‑bonus methods propagate uncertainty only *after* a high‑reward bonus is observed, so they fail to give *first‑visit* optimism and cannot drive deep exploration from scratch.  
+
+2. **Core Idea** – Maintain an ensemble of **Random Q‑Functions (RQFs)**; the *prediction error* (disagreement) among the ensemble members is used as a *state‑action bonus* that is large on first visits and decays as the ensemble learns.  
+
+3. **Reward‑Design for RQFs** – Each RQF is trained on a *synthetic reward* equal to the current ensemble error, enabling the bonus to be *self‑regulating*: when the ensemble agrees, the bonus approaches zero, otherwise it stays positive.  
+
+4. **Algorithmic Details** – VBE updates the ensemble with bootstrapped replay buffers, computes the bonus \(b(s,a)=\frac{1}{K}\sum_{k}|Q_k(s,a)-\bar Q(s,a)|\), adds it to the extrinsic reward, and selects actions greedily w.r.t. \(Q_{\text{main}}+b\).  
+
+5. **Empirical Results** – Across classic exploration benchmarks (e.g., Monte‑Z, Sparse‑Reward GridWorlds) VBE outperforms Bootstrap‑DQN, Random Network Distillation (RND), and Adaptive Curiosity Bonus (ACB); scaling experiments on Atari show comparable or superior scores with modest computational overhead.","Traditional optimistic value‑bonus methods propagate uncertainty only after a high‑reward bonus is observed.  
+Traditional optimistic value‑bonus methods fail to give first‑visit optimism.  
+Traditional optimistic value‑bonus methods cannot drive deep exploration from scratch.  
+VBE maintains an ensemble of Random Q‑Functions (RQFs).  
+VBE uses the prediction error (disagreement) among the ensemble members as a state‑action bonus.  
+The VBE bonus is large on first visits to a state‑action pair.  
+The VBE bonus decays as the ensemble learns to agree.  
+Each RQF in VBE is trained on a synthetic reward equal to the current ensemble error.  
+Training RQFs on the ensemble error makes the bonus self‑regulating.  
+When the ensemble agrees, the VBE bonus approaches zero.  
+When the ensemble disagrees, the VBE bonus remains positive.  
+VBE updates the ensemble using bootstrapped replay buffers.  
+VBE computes the bonus as \(b(s,a)=\frac{1}{K}\sum_{k}|Q_k(s,a)-\bar Q(s,a)|\).  
+VBE adds the computed bonus to the extrinsic reward received from the environment.  
+VBE selects actions greedily with respect to \(Q_{\text{main}}(s,a)+b(s,a)\).  
+VBE outperforms Bootstrap‑DQN on classic exploration benchmarks.  
+VBE outperforms Random Network Distillation (RND) on classic exploration benchmarks.  
+VBE outperforms Adaptive Curiosity Bonus (ACB) on classic exploration benchmarks.  
+The classic exploration benchmarks include Monte‑Z and Sparse‑Reward GridWorlds.  
+Scaling experiments on Atari show VBE achieves comparable or superior scores relative to baselines.  
+VBE incurs only modest computational overhead compared with the baseline methods.","Traditional optimistic value‑bonus methods propagate uncertainty only after a high‑reward bonus is observed.  
+Traditional optimistic value‑bonus methods fail to give first‑visit optimism.  
+Traditional optimistic value‑bonus methods cannot drive deep exploration from scratch.  
+VBE maintains an ensemble of Random Q‑Functions (RQFs).  
+VBE uses the prediction error (disagreement) among the ensemble members as a state‑action bonus.  
+The VBE bonus is large on first visits to a state‑action pair.  
+The VBE bonus decays as the ensemble learns to agree.  
+Each RQF in VBE is trained on a synthetic reward equal to the current ensemble error.  
+Training RQFs on the ensemble error makes the bonus self‑regulating.  
+When the ensemble agrees, the VBE bonus approaches zero.  
+When the ensemble disagrees, the VBE bonus remains positive.  
+VBE updates the ensemble using bootstrapped replay buffers.  
+VBE computes the bonus as \(b(s,a)=\frac{1}{K}\sum_{k}|Q_k(s,a)-\bar Q(s,a)|\).  
+VBE adds the computed bonus to the extrinsic reward received from the environment.  
+VBE selects actions greedily with respect to \(Q_{\text{main}}(s,a)+b(s,a)\).  
+VBE outperforms Bootstrap‑DQN on classic exploration benchmarks.  
+VBE outperforms Random Network Distillation (RND) on classic exploration benchmarks.  
+VBE outperforms Adaptive Curiosity Bonus (ACB) on classic exploration benchmarks.  
+The classic exploration benchmarks include Monte‑Z and Sparse‑Reward GridWorlds.  
+Scaling experiments on Atari show VBE achieves comparable or superior scores relative to baselines.  
+VBE incurs only modest computational overhead compared with the baseline methods.","true
+true
+true
+true
+true
+false
+true
+false
+true
+false
+true
+false
+false
+true
+true
+true
+true
+true
+true
+true
+true"
+Causal-Paced Deep Reinforcement Learning,"Geonwoo Cho, Jaegyun Im, Doyoon Kim, Sundong Kim",2025,"Designing effective task sequences is crucial for curriculum reinforcement learning (CRL), where agents must gradually acquire skills by training on intermediate tasks. A key challenge in CRL is to identify tasks that promote exploration, yet are similar enough to support effective transfer. While recent approach suggests comparing tasks via their Structural Causal Models (SCMs), the method requires access to ground-truth causal structures, an unrealistic assumption in most RL settings. In this work, we propose Causal-Paced Deep Reinforcement Learning (CP-DRL), a curriculum learning framework aware of SCM differences between tasks based on interaction data approximation. This signal captures task novelty, which we combine with the agent's learnability, measured by reward gain, to form a unified objective. Empirically, CP-DRL outperforms existing curriculum methods on the Point Mass benchmark, achieving faster convergence and higher returns. CP-DRL demonstrates reduced variance with comparable final returns in the Bipedal Walker-Trivial setting, and achieves the highest average performance in the Infeasible variant. These results indicate that leveraging causal relationships between tasks can improve the structure-awareness and sample efficiency of curriculum reinforcement learning. We provide the full implementation of CP-DRL to facilitate the reproduction of our main results at https://github.com/Cho-Geonwoo/CP-DRL.","- **Problem & Insight**: Curriculum RL must pick intermediate tasks that are novel enough to drive exploration yet share causal structure for transfer; prior work relied on exact Structural Causal Models (SCMs), which are unavailable in most RL domains.  
+- **Core Contribution (CP‑DRL)**: Introduces a data‑driven estimator of SCM divergence between source and target tasks using interaction trajectories (e.g., conditional independence tests on state‑action‑next‑state triples) to produce a *causal novelty* signal.  
+- **Unified Curriculum Objective**: Combines causal novelty \( \mathcal{N}(t) \) with a learnability term \( \Delta R(t) = \mathbb{E}[R_{t}] - \mathbb{E}[R_{t-1}] \) into a scalar score \( S(t)=\alpha \mathcal{N}(t)+\beta \Delta R(t) \); tasks are sequenced by maximizing \(S(t)\) at each curriculum step.  
+- **Empirical Results**: On the Point‑Mass benchmark CP‑DRL reaches target return ≥ 0.9 in ≈ 30 % fewer environment steps than baselines; on BipedalWalker‑Trivial it matches final returns while cutting variance by ~25 %; on the Infeasible variant it attains the highest mean return (≈ 210) across seeds.  
+- **Implementation & Reproducibility**: Provides a PyTorch‑based codebase (https://github.com/Cho‑Geonwoo/CP‑DRL) with scripts for SCM‑difference estimation, curriculum scheduling, and benchmark suites, enabling direct replication of all reported experiments.","- Curriculum reinforcement‑learning (RL) must select intermediate tasks that are sufficiently novel to drive exploration while still sharing causal structure with the target task to enable transfer.  
+- Prior curriculum‑RL work relied on exact structural causal models (SCMs), which are unavailable in most RL domains.  
+- CP‑DRL introduces a data‑driven estimator of SCM divergence between source and target tasks that uses interaction trajectories (e.g., conditional‑independence tests on state‑action‑next‑state triples).  
+- The estimator produces a *causal novelty* signal for each candidate task.  
+- The unified curriculum objective combines the causal novelty term \(\mathcal{N}(t)\) with a learnability term \(\Delta R(t)=\mathbb{E}[R_{t}]-\mathbb{E}[R_{t-1}]\) into a scalar score \(S(t)=\alpha \mathcal{N}(t)+\beta \Delta R(t)\).  
+- At each curriculum step, tasks are sequenced by selecting the task that maximizes the score \(S(t)\).  
+- On the Point‑Mass benchmark, CP‑DRL reaches a target return ≥ 0.9 using approximately 30 % fewer environment steps than baseline methods.  
+- On the BipedalWalker‑Trivial benchmark, CP‑DRL attains final returns comparable to baselines while reducing performance variance by roughly 25 %.  
+- On the Infeasible variant of BipedalWalker, CP‑DRL achieves the highest mean return across random seeds, about 210.  
+- The authors release a PyTorch‑based codebase (https://github.com/Cho‑Geonwoo/CP‑DRL) that includes scripts for SCM‑difference estimation, curriculum scheduling, and the benchmark suites.  
+- The released code enables direct replication of all experiments reported in the paper.","- Curriculum reinforcement‑learning (RL) must select intermediate tasks that are sufficiently novel to drive exploration while still sharing causal structure with the target task to enable transfer.  
+- Prior curriculum‑RL work relied on exact structural causal models (SCMs), which are unavailable in most RL domains.  
+- CP‑DRL introduces a data‑driven estimator of SCM divergence between source and target tasks that uses interaction trajectories (e.g., conditional‑independence tests on state‑action‑next‑state triples).  
+- The estimator produces a *causal novelty* signal for each candidate task.  
+- The unified curriculum objective combines the causal novelty term \(\mathcal{N}(t)\) with a learnability term \(\Delta R(t)=\mathbb{E}[R_{t}]-\mathbb{E}[R_{t-1}]\) into a scalar score \(S(t)=\alpha \mathcal{N}(t)+\beta \Delta R(t)\).  
+- At each curriculum step, tasks are sequenced by selecting the task that maximizes the score \(S(t)\).  
+- On the Point‑Mass benchmark, CP‑DRL reaches a target return ≥ 0.9 using approximately 30 % fewer environment steps than baseline methods.  
+- On the BipedalWalker‑Trivial benchmark, CP‑DRL attains final returns comparable to baselines while reducing performance variance by roughly 25 %.  
+- On the Infeasible variant of BipedalWalker, CP‑DRL achieves the highest mean return across random seeds, about 210.  
+- The authors release a PyTorch‑based codebase (https://github.com/Cho‑Geonwoo/CP‑DRL) that includes scripts for SCM‑difference estimation, curriculum scheduling, and the benchmark suites.  
+- The released code enables direct replication of all experiments reported in the paper.","true
+true
+true
+true
+true
+true
+true
+false
+false
+true
+true"
+Exploring Hierarchy-Aware Inverse Reinforcement Learning,"Chris Cundy, Daniel Filan",2018,"We introduce a new generative model for human planning under the Bayesian Inverse Reinforcement Learning (BIRL) framework which takes into account the fact that humans often plan using hierarchical strategies. We describe the Bayesian Inverse Hierarchical RL (BIHRL) algorithm for inferring the values of hierarchical planners, and use an illustrative toy model to show that BIHRL retains accuracy where standard BIRL fails. Furthermore, BIHRL is able to accurately predict the goals of `Wikispeedia' game players, with inclusion of hierarchical structure in the model resulting in a large boost in accuracy. We show that BIHRL is able to significantly outperform BIRL even when we only have a weak prior on the hierarchical structure of the plans available to the agent, and discuss the significant challenges that remain for scaling up this framework to more realistic settings.","- **Model Innovation:** Introduces **Bayesian Inverse Hierarchical RL (BIHRL)**, extending the classic BIRL framework to explicitly model agents that plan with *hierarchical sub‑policies* (options) rather than flat action sequences.  
+- **Inference Mechanism:** BIHRL treats the hierarchy (option set, termination conditions, and intra‑option policies) as latent variables and performs joint Bayesian inference over both the reward function \(R\) and the hierarchical structure using a Metropolis–Hastings sampler with a hierarchical‑prior over option definitions.  
+- **Toy‑Domain Validation:** In a grid‑world with known sub‑goals, BIHRL recovers the true reward with **≈ 95 % posterior probability**, whereas standard BIRL collapses to a uniform posterior, demonstrating robustness to hierarchical planning.  
+- **Real‑World Application:** Applied to the **Wikispeedia** navigation task (≈ 2 k player trajectories), BIHRL predicts the target article with **71 % top‑1 accuracy**, a **+18 %** lift over BIRL; the gain persists even with a weak Dirichlet prior (α = 0.1) on the option space.  
+- **Scalability Outlook:** Highlights remaining challenges—computational cost of sampling over combinatorial option spaces, need for structured priors (e.g., grammar‑based option generation), and integration with deep function approximators to handle large‑scale state spaces.","- The paper introduces **Bayesian Inverse Hierarchical RL (BIHRL)**, extending the classic BIRL framework to explicitly model agents that plan with hierarchical sub‑policies (options) rather than flat action sequences.  
+- BIHRL treats the hierarchy—specifically the option set, termination conditions, and intra‑option policies—as latent variables.  
+- BIHRL performs joint Bayesian inference over both the reward function \(R\) and the hierarchical structure.  
+- The inference is carried out using a Metropolis–Hastings sampler.  
+- The sampler employs a hierarchical‑prior over option definitions.  
+- In a grid‑world toy domain with known sub‑goals, BIHRL recovers the true reward with approximately 95 % posterior probability.  
+- In the same grid‑world, standard BIRL collapses to a uniform posterior over rewards.  
+- The contrast between BIHRL and BIRL in the toy domain demonstrates robustness of BIHRL to hierarchical planning.  
+- The method is applied to the **Wikispeedia** navigation task using roughly 2 k player trajectories.  
+- BIHRL predicts the target article with 71 % top‑1 accuracy on the Wikispeedia dataset.  
+- This performance represents a +18 % lift over the accuracy achieved by standard BIRL on the same task.  
+- The 18 % lift persists even when a weak Dirichlet prior (α = 0.1) is placed on the option space.  
+- The authors highlight that sampling over combinatorial option spaces incurs high computational cost.  
+- They identify the need for structured priors—e.g., grammar‑based option generation—to mitigate the combinatorial explosion.  
+- They also note the necessity of integrating deep function approximators to scale BIHRL to large‑scale state spaces.","- The paper introduces **Bayesian Inverse Hierarchical RL (BIHRL)**, extending the classic BIRL framework to explicitly model agents that plan with hierarchical sub‑policies (options) rather than flat action sequences.  
+- BIHRL treats the hierarchy—specifically the option set, termination conditions, and intra‑option policies—as latent variables.  
+- BIHRL performs joint Bayesian inference over both the reward function \(R\) and the hierarchical structure.  
+- The inference is carried out using a Metropolis–Hastings sampler.  
+- The sampler employs a hierarchical‑prior over option definitions.  
+- In a grid‑world toy domain with known sub‑goals, BIHRL recovers the true reward with approximately 95 % posterior probability.  
+- In the same grid‑world, standard BIRL collapses to a uniform posterior over rewards.  
+- The contrast between BIHRL and BIRL in the toy domain demonstrates robustness of BIHRL to hierarchical planning.  
+- The method is applied to the **Wikispeedia** navigation task using roughly 2 k player trajectories.  
+- BIHRL predicts the target article with 71 % top‑1 accuracy on the Wikispeedia dataset.  
+- This performance represents a +18 % lift over the accuracy achieved by standard BIRL on the same task.  
+- The 18 % lift persists even when a weak Dirichlet prior (α = 0.1) is placed on the option space.  
+- The authors highlight that sampling over combinatorial option spaces incurs high computational cost.  
+- They identify the need for structured priors—e.g., grammar‑based option generation—to mitigate the combinatorial explosion.  
+- They also note the necessity of integrating deep function approximators to scale BIHRL to large‑scale state spaces.","true
+false
+true
+true
+true
+false
+true
+true
+false
+true
+false
+true
+false
+true
+true"
+Anderson Acceleration for Reinforcement Learning,"Matthieu Geist, Bruno Scherrer",2018,"Anderson acceleration is an old and simple method for accelerating the computation of a fixed point. However, as far as we know and quite surprisingly, it has never been applied to dynamic programming or reinforcement learning. In this paper, we explain briefly what Anderson acceleration is and how it can be applied to value iteration, this being supported by preliminary experiments showing a significant speed up of convergence, that we critically discuss. We also discuss how this idea could be applied more generally to (deep) reinforcement learning.","**Paper Summary (5 technical lines)**  
+
+1. **Anderson Acceleration (AA)** – a quasi‑Newton scheme that forms each new iterate as a linear combination of the last *m* fixed‑point residuals, solving a small least‑squares problem to extrapolate the next point.  
+
+2. **Application to Value Iteration** – the Bellman operator \(T\) is treated as a fixed‑point map; AA replaces the standard update \(V_{k+1}=T V_k\) with \(V_{k+1}= \sum_{i=0}^{m-1}\beta_i T V_{k-i}\), where the coefficients \(\beta\) are obtained from the residuals \(r_{k-i}=T V_{k-i}-V_{k-i}\).  
+
+3. **Convergence Boost** – on benchmark MDPs (grid‑world, random sparse MDPs) AA with modest memory (m = 3–5) reduced the number of Bellman sweeps by 30–70 % compared with plain value iteration, while preserving monotonicity under a simple damping scheme.  
+
+4. **Theoretical Insight** – the authors show that, for contraction maps with modulus γ, AA inherits the same linear convergence rate as the underlying operator but with an improved effective contraction factor that depends on the spectral properties of the residual matrix; a bound \(\|V_{k+1}-V^\*\|\le \rho_{\text{AA}}\|V_k-V^\*\|\) with \(\rho_{\text{AA}}<\gamma\) is derived under mild linear independence assumptions.  
+
+5. **Extension to (Deep) RL** – the paper sketches how AA can be embedded in policy‑evaluation (TD‑learning) and actor‑critic loops by accelerating the Bellman‑error residuals in the parameter space (e.g., using past gradient‑based value‑function updates), and discusses practical issues such as memory management, stochastic residual estimation, and compatibility with replay buffers.","- Anderson Acceleration (AA) is a quasi‑Newton scheme.  
+- AA forms each new iterate as a linear combination of the last *m* fixed‑point residuals.  
+- AA determines the combination coefficients by solving a small least‑squares problem.  
+- The purpose of the least‑squares problem is to extrapolate the next point.  
+
+- In the paper, the Bellman operator \(T\) is treated as a fixed‑point map.  
+- The standard value‑iteration update is \(V_{k+1}=T V_k\).  
+- Anderson‑accelerated value iteration replaces this update with \(V_{k+1}= \sum_{i=0}^{m-1}\beta_i\, T V_{k-i}\).  
+- The coefficients \(\beta_i\) are obtained from the residuals \(r_{k-i}=T V_{k-i}-V_{k-i}\).  
+
+- The authors evaluate AA on benchmark MDPs including grid‑world and random sparse MDPs.  
+- They use modest memory sizes with \(m = 3\) to \(5\).  
+- AA reduces the number of Bellman sweeps required by 30 % to 70 % compared with plain value iteration.  
+- AA preserves monotonicity of the value updates when a simple damping scheme is applied.  
+
+- The paper proves that for any contraction map with modulus \(\gamma\), AA inherits the same linear convergence rate as the underlying operator.  
+- AA achieves an improved effective contraction factor that depends on the spectral properties of the residual matrix.  
+- The authors derive a bound \(\|V_{k+1}-V^\*\|\le \rho_{\text{AA}}\|V_k-V^\*\|\) with \(\rho_{\text{AA}}<\gamma\).  
+- This bound holds under mild linear‑independence assumptions on the stored residuals.  
+
+- The paper sketches how AA can be embedded in policy‑evaluation (TD‑learning) algorithms.  
+- The paper sketches how AA can be embedded in actor‑critic loops.  
+- In these extensions, AA accelerates the Bellman‑error residuals in the parameter space of the value function.  
+- The implementation can use past gradient‑based value‑function updates as the residual history.  
+- The authors discuss practical issues such as memory management for storing past iterates.  
+- The authors discuss stochastic estimation of residuals.  
+- The authors discuss compatibility of AA with replay buffers used in deep reinforcement learning.","- Anderson Acceleration (AA) is a quasi‑Newton scheme.  
+- AA forms each new iterate as a linear combination of the last *m* fixed‑point residuals.  
+- AA determines the combination coefficients by solving a small least‑squares problem.  
+- The purpose of the least‑squares problem is to extrapolate the next point.  
+
+- In the paper, the Bellman operator \(T\) is treated as a fixed‑point map.  
+- The standard value‑iteration update is \(V_{k+1}=T V_k\).  
+- Anderson‑accelerated value iteration replaces this update with \(V_{k+1}= \sum_{i=0}^{m-1}\beta_i\, T V_{k-i}\).  
+- The coefficients \(\beta_i\) are obtained from the residuals \(r_{k-i}=T V_{k-i}-V_{k-i}\).  
+
+- The authors evaluate AA on benchmark MDPs including grid‑world and random sparse MDPs.  
+- They use modest memory sizes with \(m = 3\) to \(5\).  
+- AA reduces the number of Bellman sweeps required by 30 % to 70 % compared with plain value iteration.  
+- AA preserves monotonicity of the value updates when a simple damping scheme is applied.  
+
+- The paper proves that for any contraction map with modulus \(\gamma\), AA inherits the same linear convergence rate as the underlying operator.  
+- AA achieves an improved effective contraction factor that depends on the spectral properties of the residual matrix.  
+- The authors derive a bound \(\|V_{k+1}-V^\*\|\le \rho_{\text{AA}}\|V_k-V^\*\|\) with \(\rho_{\text{AA}}<\gamma\).  
+- This bound holds under mild linear‑independence assumptions on the stored residuals.  
+
+- The paper sketches how AA can be embedded in policy‑evaluation (TD‑learning) algorithms.  
+- The paper sketches how AA can be embedded in actor‑critic loops.  
+- In these extensions, AA accelerates the Bellman‑error residuals in the parameter space of the value function.  
+- The implementation can use past gradient‑based value‑function updates as the residual history.  
+- The authors discuss practical issues such as memory management for storing past iterates.  
+- The authors discuss stochastic estimation of residuals.  
+- The authors discuss compatibility of AA with replay buffers used in deep reinforcement learning.","true
+true
+true
+false
+true
+true
+false
+true
+true
+true
+true
+true
+true
+false
+false
+true
+true
+true
+true
+true
+false
+true
+false
+true
+false
+true
+true"
+A Tutorial on Meta-Reinforcement Learning,"Jacob Beck, Risto Vuorio, Evan Zheran Liu, Zheng Xiong, Luisa Zintgraf, Chelsea Finn, Shimon Whiteson",2023,"While deep reinforcement learning (RL) has fueled multiple high-profile successes in machine learning, it is held back from more widespread adoption by its often poor data efficiency and the limited generality of the policies it produces. A promising approach for alleviating these limitations is to cast the development of better RL algorithms as a machine learning problem itself in a process called meta-RL. Meta-RL is most commonly studied in a problem setting where, given a distribution of tasks, the goal is to learn a policy that is capable of adapting to any new task from the task distribution with as little data as possible. In this survey, we describe the meta-RL problem setting in detail as well as its major variations. We discuss how, at a high level, meta-RL research can be clustered based on the presence of a task distribution and the learning budget available for each individual task. Using these clusters, we then survey meta-RL algorithms and applications. We conclude by presenting the open problems on the path to making meta-RL part of the standard toolbox for a deep RL practitioner.","- The paper formalizes meta‑reinforcement learning (meta‑RL) as a bi‑level optimization problem: an outer loop learns a meta‑policy (or optimizer) over a distribution 𝒯 of MDPs, while an inner loop rapidly adapts this meta‑policy to a sampled task τ∈𝒯 using a limited data budget B.  
+- It classifies meta‑RL settings along two axes—(i) **task distribution presence** (single‑task, multi‑task, or task‑agnostic) and (ii) **adaptation budget** (few‑shot, online, or unlimited), yielding four canonical clusters that guide algorithm design.  
+- Core algorithm families are surveyed: gradient‑based methods (e.g., MAML‑RL, Reptile‑RL), recurrent‑network encoders (RL², PEARL), and evolution‑style meta‑optimizers (Meta‑CMA‑ES, Evolution Strategies), each exploiting the above clusters to trade off sample‑efficiency vs. generality.  
+- Applications spanning robotic manipulation, navigation, and game playing demonstrate that meta‑RL can reduce environment interactions by 10‑100× compared to vanilla deep RL, but performance hinges on task similarity metrics and hierarchical latent representations.  
+- Open challenges identified include scalable meta‑training under heterogeneous task distributions, robust adaptation under distribution shift, theoretical guarantees for bi‑level convergence, and integrating model‑based priors to further close the data‑efficiency gap.","- The paper formalizes meta‑reinforcement learning (meta‑RL) as a bi‑level optimization problem.  
+- In the outer loop, a meta‑policy (or optimizer) is learned over a distribution 𝒯 of Markov decision processes (MDPs).  
+- In the inner loop, the meta‑policy is rapidly adapted to a sampled task τ ∈ 𝒯 using a limited data budget B.  
+- The paper classifies meta‑RL settings along two axes: (i) task‑distribution presence and (ii) adaptation budget.  
+- Task‑distribution presence can be single‑task, multi‑task, or task‑agnostic.  
+- Adaptation budget can be few‑shot, online, or unlimited.  
+- The combination of the two axes yields four canonical clusters that guide algorithm design.  
+- The paper surveys core algorithm families for meta‑RL.  
+- One algorithm family is gradient‑based methods (e.g., MAML‑RL, Reptile‑RL).  
+- Another algorithm family is recurrent‑network encoders (e.g., RL², PEARL).  
+- A third algorithm family is evolution‑style meta‑optimizers (e.g., Meta‑CMA‑ES, Evolution Strategies).  
+- Each algorithm family exploits the canonical clusters to trade off sample‑efficiency versus generality.  
+- Applications of meta‑RL include robotic manipulation.  
+- Applications of meta‑RL include navigation.  
+- Applications of meta‑RL include game playing.  
+- Meta‑RL can reduce environment interactions by 10‑100× compared to vanilla deep RL.  
+- The performance of meta‑RL hinges on task similarity metrics.  
+- The performance of meta‑RL hinges on hierarchical latent representations.  
+- An open challenge is scalable meta‑training under heterogeneous task distributions.  
+- An open challenge is robust adaptation under distribution shift.  
+- An open challenge is providing theoretical guarantees for bi‑level convergence.  
+- An open challenge is integrating model‑based priors to further close the data‑efficiency gap.","- The paper formalizes meta‑reinforcement learning (meta‑RL) as a bi‑level optimization problem.  
+- In the outer loop, a meta‑policy (or optimizer) is learned over a distribution 𝒯 of Markov decision processes (MDPs).  
+- In the inner loop, the meta‑policy is rapidly adapted to a sampled task τ ∈ 𝒯 using a limited data budget B.  
+- The paper classifies meta‑RL settings along two axes: (i) task‑distribution presence and (ii) adaptation budget.  
+- Task‑distribution presence can be single‑task, multi‑task, or task‑agnostic.  
+- Adaptation budget can be few‑shot, online, or unlimited.  
+- The combination of the two axes yields four canonical clusters that guide algorithm design.  
+- The paper surveys core algorithm families for meta‑RL.  
+- One algorithm family is gradient‑based methods (e.g., MAML‑RL, Reptile‑RL).  
+- Another algorithm family is recurrent‑network encoders (e.g., RL², PEARL).  
+- A third algorithm family is evolution‑style meta‑optimizers (e.g., Meta‑CMA‑ES, Evolution Strategies).  
+- Each algorithm family exploits the canonical clusters to trade off sample‑efficiency versus generality.  
+- Applications of meta‑RL include robotic manipulation.  
+- Applications of meta‑RL include navigation.  
+- Applications of meta‑RL include game playing.  
+- Meta‑RL can reduce environment interactions by 10‑100× compared to vanilla deep RL.  
+- The performance of meta‑RL hinges on task similarity metrics.  
+- The performance of meta‑RL hinges on hierarchical latent representations.  
+- An open challenge is scalable meta‑training under heterogeneous task distributions.  
+- An open challenge is robust adaptation under distribution shift.  
+- An open challenge is providing theoretical guarantees for bi‑level convergence.  
+- An open challenge is integrating model‑based priors to further close the data‑efficiency gap.","true
+true
+true
+false
+true
+true
+false
+true
+true
+true
+true
+false
+true
+true
+false
+true
+true
+true
+false
+true
+true
+false"
