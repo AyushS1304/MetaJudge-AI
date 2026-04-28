@@ -1,5 +1,5 @@
 def main():
-    print("Hello from factguard!")
+    print("Hello from MetaJudge AI !")
 
 
 if __name__ == "__main__":

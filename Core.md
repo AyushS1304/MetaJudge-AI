@@ -1,10 +1,10 @@
-# FactGuard Core Guide
+# MetaJudge AI Core Guide
 
 This file is a practical walkthrough of how this project works, so you can quickly understand, run, and modify it.
 
 ## 1) What this project does
 
-FactGuard checks AI-generated summaries of AI/ML papers and fixes factual mistakes.
+MetaJudge AI checks AI-generated summaries of AI/ML papers and fixes factual mistakes.
 
 High-level idea:
 1. Break summary into small factual claims.

@@ -1,5 +1,5 @@
 """
-streamlit_app.py — Skeptical CoVe-RAG Demo
+streamlit_app.py - MetaJudge AI Streamlit demo
 """
 import streamlit as st
 import time, os, sys, re
@@ -7,7 +7,7 @@ import time, os, sys, re
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-st.set_page_config(page_title="Skeptical CoVe-RAG", page_icon="⚡",
+st.set_page_config(page_title="MetaJudge AI", page_icon="AI",
                    layout="wide", initial_sidebar_state="expanded")
 
 st.markdown("""<style>
@@ -125,7 +125,7 @@ with st.sidebar:
 6. Surgical editor""")
 
 # ── Header ─────────────────────────────────────────────────────────────────
-st.markdown('<p class="main-title">⚡ Skeptical CoVe-RAG</p>', unsafe_allow_html=True)
+st.markdown('<p class="main-title">MetaJudge AI</p>', unsafe_allow_html=True)
 st.markdown('<p class="sub-title">Meta-Verification of LLM Judges through Adversarial Falsification for Hallucination Correction</p>', unsafe_allow_html=True)
 
 if not st.session_state.groq_confirmed:

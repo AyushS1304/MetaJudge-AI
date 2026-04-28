@@ -1,10 +1,10 @@
-# ⚡ FactGuard — Skeptical CoVe-RAG
+# ⚡ MetaJudge AI — Skeptical CoVe-RAG
 
 > **Meta-Verification of LLM Judges through Adversarial Falsification for Hallucination Correction**
 
-FactGuard is a hallucination detection and correction pipeline for AI/ML research paper summaries. It breaks any summary into atomic claims, generates adversarial queries designed to *disprove* each claim, retrieves authoritative evidence from arXiv and the web, and uses a dual-LLM verification loop to detect and surgically correct factual errors — with zero false positives.
+MetaJudge AI is a hallucination detection and correction pipeline for AI/ML research paper summaries. It breaks any summary into atomic claims, generates adversarial queries designed to *disprove* each claim, retrieves authoritative evidence from arXiv and the web, and uses a dual-LLM verification loop to detect and surgically correct factual errors — with zero false positives.
 
-[![Python](https://img.shields.io/badge/Python-3.10+-blue)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.12+-blue)](https://python.org)
 [![Groq](https://img.shields.io/badge/LLM-Groq%20LLaMA%203.3%2070B-orange)](https://groq.com)
 [![Gemini](https://img.shields.io/badge/2nd%20Judge-Gemini%202.0%20Flash-purple)](https://aistudio.google.com)
 [![Streamlit](https://img.shields.io/badge/Demo-Streamlit-red)](https://streamlit.io)
@@ -18,7 +18,7 @@ LLMs frequently hallucinate subtle factual errors when summarising research pape
 
 **Example:** An LLM summarises BERT as achieving "80.5% F1 on SQuAD 2.0". The real score is 83.1%. The error is subtle, numerically plausible, and a standard RAG system will not catch it because it searches for supporting evidence, not contradicting evidence.
 
-FactGuard catches it.
+MetaJudge AI catches it.
 
 ---
 
@@ -110,7 +110,7 @@ Input Summary
 ## Installation
 
 ### Prerequisites
-- Python 3.10+
+- Python 3.12+
 - A free [Groq API key](https://console.groq.com) (required)
 - A free [Gemini API key](https://aistudio.google.com) (optional — enables PDF reading)
 
@@ -118,15 +118,14 @@ Input Summary
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/Aniket200424/FactGuard.git
-cd FactGuard
+git clone https://github.com/AyushS1304/MetaJudge-AI.git
+cd MetaJudge-AI
 
 # 2. Install dependencies
 pip install -r requirements.txt
 
 # 3. Create your .env file
-cp .env.example .env
-# Edit .env and add your API keys
+# Create a file named .env and add your API keys
 
 # 4. Run the Streamlit demo
 streamlit run streamlit_app.py
@@ -137,6 +136,17 @@ streamlit run streamlit_app.py
 GROQ_API_KEY=gsk_your_key_here
 GEMINI_API_KEY=AIza_your_key_here   # optional but recommended
 ```
+
+### FastAPI backend
+
+```bash
+uvicorn fastapi_app:app --host 127.0.0.1 --port 8000
+```
+
+Useful endpoints:
+- `GET /`
+- `GET /health`
+- `POST /api/v1/verify`
 
 ---
 
@@ -197,15 +207,33 @@ print(result["results"])         # per-fact verdicts with reasoning
 
 ---
 
+### Option 4 — FastAPI
+
+```bash
+uvicorn fastapi_app:app --host 127.0.0.1 --port 8000
+```
+
+Example request:
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/v1/verify \
+  -H "Content-Type: application/json" \
+  -d "{\"summary\":\"Paris is the capital of France.\",\"verbose\":false}"
+```
+
+---
+
 ## Project Structure
 
 ```
-FactGuard/
+MetaJudge-AI/
+├── fastapi_app.py               ← FastAPI backend
 ├── pipeline.py                  ← Main orchestrator
 ├── streamlit_app.py             ← Web demo UI
 ├── config.py                    ← API keys, model names, constants
+├── env_utils.py                 ← Local .env loader
 ├── requirements.txt
-├── .env.example
+├── .env                         ← Local-only API keys (not committed)
 │
 ├── modules/
 │   ├── atomicizer.py            ← Step 1: atomic decomposition
@@ -299,12 +327,12 @@ python evaluation/ablation.py
 ## Citation
 
 ```bibtex
-@misc{shah2026factguard,
-  title   = {FactGuard: Meta-Verification of LLM Judges through Adversarial Falsification for Hallucination Correction},
+@misc{shah2026metajudgeai,
+  title   = {MetaJudge AI: Meta-Verification of LLM Judges through Adversarial Falsification for Hallucination Correction},
   author  = {Shah, Aniket},
   year    = {2026},
   note    = {B.Tech Final Year Project, Bharati Vidyapeeth's College of Engineering},
-  url     = {https://github.com/Aniket200424/FactGuard}
+  url     = {https://github.com/AyushS1304/MetaJudge-AI}
 }
 ```
 

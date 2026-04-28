@@ -1,5 +1,5 @@
 """
-FastAPI backend for FactGuard.
+FastAPI backend for MetaJudge AI.
 
 Run:
     uvicorn fastapi_app:app --reload --host 0.0.0.0 --port 8000
@@ -73,9 +73,9 @@ class VerifyResponse(BaseModel):
 
 
 app = FastAPI(
-    title="FactGuard API",
+    title="MetaJudge AI API",
     version="1.0.0",
-    description="Backend API for FactGuard Skeptical CoVe-RAG",
+    description="Backend API for MetaJudge AI Skeptical CoVe-RAG",
 )
 
 app.add_middleware(
@@ -89,7 +89,7 @@ app.add_middleware(
 
 @app.get("/")
 def root() -> dict[str, str]:
-    return {"message": "FactGuard API is running"}
+    return {"message": "MetaJudge AI API is running"}
 
 
 @app.get("/health")
