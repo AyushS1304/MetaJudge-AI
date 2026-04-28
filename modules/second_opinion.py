@@ -13,8 +13,8 @@ not at import time — so sidebar key entry always works.
 
 import os, re, sys, requests, json, time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from dotenv import load_dotenv
-load_dotenv()
+from env_utils import load_env
+load_env()
 
 _PDF_CACHE: dict[str, bytes] = {}
 

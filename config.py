@@ -4,9 +4,9 @@ Set your GROQ_API_KEY in a .env file or as an environment variable.
 """
 
 import os
-from dotenv import load_dotenv
+from env_utils import load_env
 
-load_dotenv()
+load_env()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 

@@ -13,8 +13,8 @@ Key design: gemini_key passed explicitly every call — never cached at module l
 
 import os, re, sys, json, requests
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from dotenv import load_dotenv
-load_dotenv()
+from env_utils import load_env
+load_env()
 
 _PDF_CACHE:  dict[str, bytes] = {}
 _TEXT_CACHE: dict[str, str]   = {}
