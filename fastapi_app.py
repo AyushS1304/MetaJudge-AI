@@ -18,6 +18,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from env_utils import load_env
+from modules.runtime import refresh_groq_clients
 
 
 load_env()
@@ -30,35 +31,6 @@ def _parse_cors_origins() -> list[str]:
     )
     origins = [o.strip() for o in raw.split(",") if o.strip()]
     return origins or ["http://localhost:3000", "http://localhost:5173"]
-
-
-def _refresh_groq_clients(groq_api_key: str) -> None:
-    """
-    Refresh module-level Groq clients.
-    These modules initialize clients at import time, so we rebind them when key changes.
-    """
-    if not groq_api_key:
-        return
-
-    try:
-        from groq import Groq
-
-        client = Groq(api_key=groq_api_key)
-
-        import modules.atomicizer as atomicizer
-        import modules.query_generator as query_generator
-        import modules.judge as judge
-        import modules.cove_loop as cove_loop
-        import modules.editor as editor
-
-        atomicizer.client = client
-        query_generator.client = client
-        judge.client = client
-        cove_loop.client = client
-        editor.client = client
-    except Exception:
-        # If refresh fails, pipeline execution will still raise clear provider errors.
-        pass
 
 
 class VerifyRequest(BaseModel):
@@ -115,7 +87,10 @@ async def verify_summary(payload: VerifyRequest) -> VerifyResponse:
         )
 
     # Ensure module-level Groq clients use the .env key.
-    _refresh_groq_clients(os.environ["GROQ_API_KEY"])
+    try:
+        refresh_groq_clients(os.environ["GROQ_API_KEY"])
+    except Exception:
+        pass
 
     started = time.perf_counter()
     try:

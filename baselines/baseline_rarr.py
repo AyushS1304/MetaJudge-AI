@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from groq import Groq
 from modules.atomicizer  import atomicize
 from modules.retriever   import retrieve_evidence, format_evidence_block
+from modules.text_utils import find_best_matching_sentence
 from config import GROQ_API_KEY, FAST_MODEL, STRONG_MODEL, MAX_FACTS
 
 client = Groq(api_key=GROQ_API_KEY)
@@ -103,7 +104,7 @@ def run_vanilla_rarr(summary: str, verbose: bool = True) -> dict:
 
         if result["verdict"] == "CONTRADICTED":
             # Vanilla RARR: rewrite full sentence (destructive)
-            source = _find_sentence(summary, fact)
+            source = find_best_matching_sentence(summary, fact)
             rewritten = _rewrite_sentence(source, ev_block)
             result["original_sentence"] = source
             result["rewritten_sentence"] = rewritten
@@ -135,16 +136,6 @@ def run_vanilla_rarr(summary: str, verbose: bool = True) -> dict:
         "n_contradicted": len(rewrites),
         "n_total":        len(facts),
     }
-
-def _find_sentence(text: str, fact: str) -> str:
-    sentences = [s.strip() for s in text.replace(".\n", ". ").split(". ") if s.strip()]
-    fact_words = set(fact.lower().split())
-    best, best_score = text, 0
-    for s in sentences:
-        score = len(set(s.lower().split()) & fact_words)
-        if score > best_score:
-            best_score, best = score, s
-    return best + ("." if not best.endswith(".") else "")
 
 
 if __name__ == "__main__":

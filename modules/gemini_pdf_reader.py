@@ -19,11 +19,11 @@ import os
 import re
 import sys
 import requests
-import tempfile
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from dotenv import load_dotenv
-load_dotenv()
+from env_utils import load_env
+
+load_env()
 
 # Key read fresh inside each function — never cached at import time
 
@@ -156,7 +156,7 @@ def get_gemini_evidence_for_fact(
 
 if __name__ == "__main__":
     # Test with LoRA
-    if not GEMINI_API_KEY:
+    if not os.environ.get("GEMINI_API_KEY"):
         print("Set GEMINI_API_KEY in .env first")
     else:
         print("Testing Gemini PDF reader on LoRA (2106.09685)...")

@@ -10,12 +10,12 @@ from __future__ import annotations
 import os
 import sys
 
-from dotenv import load_dotenv
+from env_utils import load_env
 
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-load_dotenv()
+load_env()
 
 FACT = "BERT achieved 80.5% F1 on the SQuAD 2.0 benchmark."
 

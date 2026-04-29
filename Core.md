@@ -22,9 +22,8 @@ Main goal: catch subtle hallucinations (wrong number, year, author, etc.) with l
 - `config.py`: models, API keys, and constants.
 
 Note:
-- CLI path (`pipeline.py`) uses `modules/second_opinion.py` for fallback checks.
-- Streamlit path (`streamlit_app.py`) uses `modules/deep_verifier.py` for fallback checks.
-- Both serve the same purpose (handle `INSUFFICIENT_EVIDENCE`) but are different implementations.
+- Both the CLI path (`pipeline.py`) and Streamlit path (`streamlit_app.py`) now use the shared deep-verification fallback in `modules/deep_verifier.py`.
+- `modules/second_opinion.py` remains as a compatibility wrapper for older imports.
 
 ## 3) End-to-end architecture (6 steps)
 

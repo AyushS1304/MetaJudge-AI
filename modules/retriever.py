@@ -44,14 +44,6 @@ try:
 except ImportError:
     from duckduckgo_search import DDGS
 
-# PDF fetcher for full paper content (results tables, experiments)
-try:
-    from modules.pdf_fetcher import fetch_paper_full_content
-    PDF_FETCH_AVAILABLE = True
-except ImportError:
-    PDF_FETCH_AVAILABLE = False
-
-
 # ── Known paper aliases for direct arXiv lookup ───────────────────────────────
 # Maps common names → arXiv IDs for instant exact retrieval
 KNOWN_PAPERS = {
@@ -241,7 +233,7 @@ def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> 
 
     All sources run concurrently — cuts retrieval time from ~4 min to ~20-30 sec.
     """
-    from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
+    from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
 
     tasks = []
 
@@ -251,14 +243,6 @@ def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> 
     for q in queries:
         tasks.append(("arxiv", q, None))
         tasks.append(("web",   q, None))
-
-    # Add PDF fetch tasks for known papers found in fact+context
-    if PDF_FETCH_AVAILABLE:
-        search_text = (fact + " " + context).lower()
-        for keyword, arxiv_id in KNOWN_PAPERS.items():
-            if keyword in search_text:
-                tasks.append(("pdf", arxiv_id, fact))
-                break  # one PDF fetch per call is enough
 
     fact_lower    = fact.lower()
     context_lower = context.lower()
@@ -322,11 +306,15 @@ def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> 
     # Run all in parallel with a 30-second timeout per task
     with ThreadPoolExecutor(max_workers=6) as executor:
         futures = {executor.submit(run_task, t): t for t in tasks}
-        for future in as_completed(futures, timeout=45):
-            try:
-                raw_results.extend(future.result(timeout=30))
-            except Exception:
-                pass
+        try:
+            for future in as_completed(futures, timeout=45):
+                try:
+                    raw_results.extend(future.result(timeout=30))
+                except Exception:
+                    pass
+        except TimeoutError:
+            # Best-effort retrieval: keep whatever finished rather than failing the pipeline.
+            pass
 
     # Deduplicate — PDF first (most detailed), then direct, then rest
     all_evidence = []
