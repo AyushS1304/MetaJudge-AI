@@ -4,6 +4,7 @@ duckduckgo-search
 google-genai
 groq
 langchain-community
+matplotlib
 pandas
 PyMuPDF
 python-dotenv

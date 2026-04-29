@@ -25,7 +25,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from groq import Groq
 from modules.atomicizer import atomicize
-from config import GROQ_API_KEY, STRONG_MODEL, MAX_FACTS
+from config import GROQ_API_KEY, FAST_MODEL, STRONG_MODEL, MAX_FACTS
 
 client = Groq(api_key=GROQ_API_KEY)
 
@@ -40,27 +40,42 @@ For each claim, return a JSON object:
 }
 """
 
-def run_zeroshot(summary: str, verbose: bool = True) -> dict:
+def run_zeroshot(
+    summary: str,
+    verbose: bool = True,
+    *,
+    facts_override: list[str] | None = None,
+    sleep_seconds: float = 0.2,
+) -> dict:
     """
     Run Zero-Shot fact-checking (baseline).
     No retrieval — pure LLM parametric memory.
     """
-    facts   = atomicize(summary)[:MAX_FACTS]
+    facts   = [fact.strip() for fact in (facts_override or atomicize(summary)) if str(fact).strip()][:MAX_FACTS]
     results = []
 
     if verbose:
         print(f"\n[Baseline: Zero-Shot LLM] {len(facts)} facts to check.")
 
-    for fact in facts:
-        response = client.chat.completions.create(
-            model=STRONG_MODEL,
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user",   "content": f"Fact-check this claim using your knowledge:\n\n{fact}"}
-            ],
-            temperature=0.0,
-            max_tokens=256,
-        )
+    for index, fact in enumerate(facts):
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": f"Fact-check this claim using your knowledge:\n\n{fact}"},
+        ]
+        try:
+            response = client.chat.completions.create(
+                model=STRONG_MODEL,
+                messages=messages,
+                temperature=0.0,
+                max_tokens=256,
+            )
+        except Exception:
+            response = client.chat.completions.create(
+                model=FAST_MODEL,
+                messages=messages,
+                temperature=0.0,
+                max_tokens=256,
+            )
 
         raw = response.choices[0].message.content.strip()
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
@@ -77,6 +92,7 @@ def run_zeroshot(summary: str, verbose: bool = True) -> dict:
             verdict = "INSUFFICIENT_EVIDENCE"
 
         result = {
+            "claim_index": index,
             "fact":       fact,
             "verdict":    verdict,
             "reasoning":  parsed.get("reasoning", ""),
@@ -86,7 +102,8 @@ def run_zeroshot(summary: str, verbose: bool = True) -> dict:
 
         if verbose:
             print(f"  {result['verdict']:28s} | {fact[:65]}")
-        time.sleep(0.2)
+        if sleep_seconds > 0:
+            time.sleep(sleep_seconds)
 
     contradictions = [r for r in results if r["verdict"] == "CONTRADICTED"]
 

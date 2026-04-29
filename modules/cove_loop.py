@@ -22,7 +22,7 @@ import json
 from groq import Groq
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import GROQ_API_KEY, STRONG_MODEL, MIN_EVIDENCE_CHARS
+from config import FAST_MODEL, GROQ_API_KEY, STRONG_MODEL, MIN_EVIDENCE_CHARS
 from modules.judge import VERDICT_CONTRADICTED, VERDICT_INSUFFICIENT
 
 client = Groq(api_key=GROQ_API_KEY)
@@ -74,15 +74,28 @@ def _verify_judge_decision(
         "Is the judge's contradiction claim grounded in the actual evidence? Respond with JSON."
     )
 
-    response = client.chat.completions.create(
-        model=STRONG_MODEL,
-        messages=[
-            {"role": "system", "content": COVE_SYSTEM_PROMPT},
-            {"role": "user",   "content": user_msg},
-        ],
-        temperature=0.0,
-        max_tokens=256,
-    )
+    messages = [
+        {"role": "system", "content": COVE_SYSTEM_PROMPT},
+        {"role": "user", "content": user_msg},
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model=STRONG_MODEL,
+            messages=messages,
+            temperature=0.0,
+            max_tokens=256,
+        )
+    except Exception:
+        try:
+            response = client.chat.completions.create(
+                model=FAST_MODEL,
+                messages=messages,
+                temperature=0.0,
+                max_tokens=256,
+            )
+        except Exception:
+            return {"meta_verdict": "OVERTURNED", "reason": "CoVe request failed - defaulting to safe reversal."}
 
     raw = response.choices[0].message.content.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw)

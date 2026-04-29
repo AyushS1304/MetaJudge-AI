@@ -78,28 +78,36 @@ def _rewrite_sentence(original: str, evidence_block: str) -> str:
     )
     return response.choices[0].message.content.strip()
 
-def run_vanilla_rarr(summary: str, verbose: bool = True) -> dict:
+def run_vanilla_rarr(
+    summary: str,
+    verbose: bool = True,
+    *,
+    facts_override: list[str] | None = None,
+    sleep_seconds: float = 0.3,
+) -> dict:
     """
     Run Vanilla RARR pipeline (baseline).
     Atomic decomposition + blind judge + full-sentence rewrite.
     """
-    facts   = atomicize(summary)[:MAX_FACTS]
+    facts   = [fact.strip() for fact in (facts_override or atomicize(summary)) if str(fact).strip()][:MAX_FACTS]
     results = []
     rewrites = []
 
     if verbose:
         print(f"\n[Baseline: Vanilla RARR] {len(facts)} facts extracted.")
 
-    for fact in facts:
+    for index, fact in enumerate(facts):
         query    = _supportive_query(fact)
         evidence = retrieve_evidence([query])
         ev_block = format_evidence_block(evidence)
         verdict  = _judge_fact(fact, ev_block)
 
         result = {
+            "claim_index": index,
             "fact":      fact,
             "verdict":   verdict.get("verdict", "INSUFFICIENT_EVIDENCE"),
             "reasoning": verdict.get("reasoning", ""),
+            "correction": verdict.get("correction", ""),
         }
 
         if result["verdict"] == "CONTRADICTED":
@@ -117,7 +125,8 @@ def run_vanilla_rarr(summary: str, verbose: bool = True) -> dict:
                 print(f"  {result['verdict']:28s} | {fact[:60]}")
 
         results.append(result)
-        time.sleep(0.3)
+        if sleep_seconds > 0:
+            time.sleep(sleep_seconds)
 
     # Apply rewrites (full-sentence replacement)
     corrected = summary

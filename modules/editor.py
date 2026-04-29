@@ -17,7 +17,7 @@ import json
 from groq import Groq
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import GROQ_API_KEY, STRONG_MODEL
+from config import FAST_MODEL, GROQ_API_KEY, STRONG_MODEL
 
 client = Groq(api_key=GROQ_API_KEY)
 
@@ -70,15 +70,34 @@ def edit_sentence(
         f"Make the minimal surgical correction. Return JSON."
     )
 
-    response = client.chat.completions.create(
-        model=STRONG_MODEL,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user",   "content": user_msg},
-        ],
-        temperature=0.0,
-        max_tokens=512,
-    )
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_msg},
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model=STRONG_MODEL,
+            messages=messages,
+            temperature=0.0,
+            max_tokens=512,
+        )
+    except Exception:
+        try:
+            response = client.chat.completions.create(
+                model=FAST_MODEL,
+                messages=messages,
+                temperature=0.0,
+                max_tokens=512,
+            )
+        except Exception:
+            return {
+                "corrected_text": original_sentence,
+                "error_span": "",
+                "correction": "",
+                "source_url": src_url,
+                "changed": False,
+            }
 
     raw = response.choices[0].message.content.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw)

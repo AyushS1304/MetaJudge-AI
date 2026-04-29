@@ -1,326 +1,192 @@
-# ⚡ MetaJudge AI — Skeptical CoVe-RAG
+# MetaJudge AI
 
-> **Meta-Verification of LLM Judges through Adversarial Falsification for Hallucination Correction**
+> Meta-Verification of LLM Judges through Adversarial Falsification for Hallucination Correction
 
-MetaJudge AI is a hallucination detection and correction pipeline for AI/ML research paper summaries. It breaks any summary into atomic claims, generates adversarial queries designed to *disprove* each claim, retrieves authoritative evidence from arXiv and the web, and uses a dual-LLM verification loop to detect and surgically correct factual errors — with zero false positives.
+MetaJudge investigates whether adversarial falsification outperforms confirmatory retrieval for factual error detection in scientific summarization, combining adversarial queries, hybrid retrieval, CoVe verification, cross-claim consistency graphs, and surgical correction.
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue)](https://python.org)
 [![Groq](https://img.shields.io/badge/LLM-Groq%20LLaMA%203.3%2070B-orange)](https://groq.com)
-[![Gemini](https://img.shields.io/badge/2nd%20Judge-Gemini%202.0%20Flash-purple)](https://aistudio.google.com)
-[![Streamlit](https://img.shields.io/badge/Demo-Streamlit-red)](https://streamlit.io)
+[![Gemini](https://img.shields.io/badge/2nd%20Judge-Gemini%202.0%20Flash-green)](https://aistudio.google.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
 ---
 
-## The Problem
+## Research Question
 
-LLMs frequently hallucinate subtle factual errors when summarising research papers — wrong benchmark scores, incorrect author names, wrong years, wrong methods. These errors are hard to detect because they are plausible and well-formatted. Standard RAG systems make this worse by retrieving evidence that *confirms* whatever the LLM already believes.
+Can an adversarial retrieval strategy that tries to disprove a claim detect factual errors in scientific summaries better than standard confirmatory retrieval?
 
-**Example:** An LLM summarises BERT as achieving "80.5% F1 on SQuAD 2.0". The real score is 83.1%. The error is subtle, numerically plausible, and a standard RAG system will not catch it because it searches for supporting evidence, not contradicting evidence.
+MetaJudge answers that question with a 6-stage correction pipeline plus a cross-claim consistency layer:
 
-MetaJudge AI catches it.
+1. Atomicizer
+2. Cross-Claim Consistency Check
+3. Adversarial Query Generation
+4. Hybrid Retrieval
+5. LLM Judge plus CoVe verification
+6. Surgical Correction
 
----
-
-## Architecture — 6 Steps
-
-```
-Input Summary
-      │
-      ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Step 1: Atomicizer                                             │
-│  Breaks summary into self-contained atomic facts               │
-│  "BERT achieved 80.5% F1 on SQuAD 2.0" — one verifiable claim │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Step 2: Adversarial Query Generator                           │
-│  Generates queries designed to DISPROVE the claim              │
-│  ↯ "BERT actual SQuAD 2.0 F1 score vs claimed 80.5%"          │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Step 3: Hybrid Retriever (parallel)                           │
-│  ├── arXiv Direct: fetches original paper abstract by ID       │
-│  ├── arXiv Adversarial: searches with adversarial query        │
-│  └── DuckDuckGo Web: broad web search for corroborating data   │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Step 4: LLM Judge (Groq LLaMA-3.3-70B)                       │
-│  Compares claim vs evidence — SUPPORTED / CONTRADICTED /       │
-│  INSUFFICIENT_EVIDENCE                                         │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                  ┌─────────▼──────────┐
-                  │ INSUFFICIENT?      │
-                  │ Step 4b: Gemini    │
-                  │ reads full PDF +   │
-                  │ results tables via │
-                  │ LangChain          │
-                  └─────────┬──────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Step 5: CoVe Loop ★ (Chain-of-Verification)                  │
-│  Meta-judge audits the judge's decision                        │
-│  Requires verbatim evidence quote — prevents false corrections │
-│  CONFIRMED_CONTRADICTION → proceed / OVERTURNED → revert      │
-└───────────────────────────┬─────────────────────────────────────┘
-                            │
-                            ▼
-┌─────────────────────────────────────────────────────────────────┐
-│  Step 6: RARR Editor                                           │
-│  Surgical token replacement — only the wrong value is changed  │
-│  "80.5%" → "83.1%" with source URL attached                    │
-└─────────────────────────────────────────────────────────────────┘
-```
+The pipeline is aimed at AI/ML paper summaries where subtle hallucinations often appear as wrong benchmark scores, dates, authors, or architecture details.
 
 ---
 
-## Key Results
+## Novelty Over Baselines
 
-| Metric | Value |
-|---|---|
-| Precision | **1.000** |
-| False Positives | **0** |
-| CoVe Reversals | 0 (judge was accurate) |
-| Claims evaluated | 26 (SkepticBench-5) |
-| Dataset | 66 papers, 874 facts, 443 corruptions |
-
----
-
-## What It Catches
-
-| Error Type | Example | Detection |
-|---|---|---|
-| Metric errors | BERT 80.5% → real 83.1% on SQuAD 2.0 | ✅ High |
-| Author errors | Lee et al. → real Min et al. for FActScore | ✅ High |
-| Date errors | GPT-4 March 2022 → real March 2023 | ✅ High |
-| Architecture errors | 8 layers → real 6 layers in Transformer | ✅ High |
-| Venue errors | ICML → real NeurIPS | ⚠️ Low (not in abstracts) |
-| Hyperparameter errors | LoRA rank=8 → real rank=4 | ⚠️ Requires Gemini PDF |
+| Feature | MetaJudge | RARR | FActScore | SAFE |
+|---|---|---|---|---|
+| Adversarial queries | Yes | No | No | No |
+| Cross-claim consistency | Yes | No | No | No |
+| CoVe meta-verification | Yes | No | No | No |
+| Surgical correction | Yes | Yes | No | No |
+| PDF fallback reading | Yes | No | No | No |
 
 ---
 
-## Installation
+## Architecture
 
-### Prerequisites
-- Python 3.12+
-- A free [Groq API key](https://console.groq.com) (required)
-- A free [Gemini API key](https://aistudio.google.com) (optional — enables PDF reading)
+### Step 1: Atomicizer
+Break the summary into self-contained, verifiable claims.
 
-### Setup
+### Step 1.5: Cross-Claim Consistency Check
+Detect internal contradictions between atomic claims before retrieval. Claims flagged here are marked `INTERNAL_CONTRADICTION` and skip retrieval entirely.
 
-```bash
-# 1. Clone the repo
-git clone https://github.com/AyushS1304/MetaJudge-AI.git
-cd MetaJudge-AI
+### Step 2: Adversarial Query Generator
+Generate skeptical queries designed to falsify a claim rather than confirm it.
 
-# 2. Install dependencies
-pip install -r requirements.txt
+### Step 3: Hybrid Retriever
+Retrieve evidence from:
 
-# 3. Create your .env file
-# Create a file named .env and add your API keys
+- direct arXiv paper lookup
+- adversarial arXiv search
+- web search
+- Gemini/PDF fallback when deeper evidence is needed
 
-# 4. Run the Streamlit demo
-streamlit run streamlit_app.py
-```
+### Step 4: LLM Judge
+Compare each claim with retrieved evidence and produce `SUPPORTED`, `CONTRADICTED`, or `INSUFFICIENT_EVIDENCE`.
 
-### .env file
-```
-GROQ_API_KEY=gsk_your_key_here
-GEMINI_API_KEY=AIza_your_key_here   # optional but recommended
-```
+### Step 5: CoVe
+Require the judge to ground contradiction decisions in a real evidence quote before allowing a correction.
 
-### FastAPI backend
-
-```bash
-uvicorn fastapi_app:app --host 127.0.0.1 --port 8000
-```
-
-Useful endpoints:
-- `GET /`
-- `GET /health`
-- `POST /api/v1/verify`
+### Step 6: Surgical Editor
+Apply minimal token-level edits instead of rewriting the entire sentence.
 
 ---
 
-## How to Use
+## Evaluation
 
-### Option 1 — Streamlit Demo (recommended)
+The evaluation stack reports:
 
-```bash
-streamlit run streamlit_app.py
-```
+- Precision
+- Recall
+- F1
+- Correction Accuracy
+- False Positive Rate
+- Precision-recall curves from per-claim detection confidence
 
-1. Enter your Groq API key in the sidebar and click **Confirm**
-2. Optionally add your Gemini key for deeper PDF analysis
-3. Paste any AI-generated summary about an AI/ML paper
-4. Click **Run Pipeline**
-5. Watch the live console as each step processes
-6. See the corrected output, disputed facts, and full chain-of-thought
+`evaluation/compare_all.py` generates:
 
-**Built-in examples to try:**
-- BERT — metric error (80.5% → 83.1%)
-- FActScore — author error (Lee → Min et al.)
-- GPT-4 — date error (2022 → 2023)
-- Transformer — architecture error (8 → 6 layers)
-
----
-
-### Option 2 — Command Line
-
-```bash
-# Run on a custom text
-python pipeline.py --text "BERT achieved 80.5% F1 on the SQuAD 2.0 benchmark."
-
-# Run on the sample benchmark (5 entries)
-python pipeline.py --bench
-
-# Save results to file (for the full dataset)
-python pipeline.py --bench > results.txt 2>&1
-```
-
----
-
-### Option 3 — Python API
-
-```python
-from pipeline import run_pipeline
-
-summary = """
-BERT, introduced by Google in 2018, achieved 80.5% F1 on the SQuAD 2.0 benchmark.
-The model uses a bidirectional transformer encoder pre-trained on BookCorpus and English Wikipedia.
-"""
-
-result = run_pipeline(summary, verbose=True)
-
-print(result["corrected"])       # corrected summary
-print(result["corrections"])     # list of changes made
-print(result["results"])         # per-fact verdicts with reasoning
-```
-
----
-
-### Option 4 — FastAPI
-
-```bash
-uvicorn fastapi_app:app --host 127.0.0.1 --port 8000
-```
-
-Example request:
-
-```bash
-curl -X POST http://127.0.0.1:8000/api/v1/verify \
-  -H "Content-Type: application/json" \
-  -d "{\"summary\":\"Paris is the capital of France.\",\"verbose\":false}"
-```
+- Table 1: system comparison
+- Table 2: ablations for adversarial queries, CoVe, Gemini PDF fallback, and the consistency checker
 
 ---
 
 ## Project Structure
 
-```
+```text
 MetaJudge-AI/
-├── fastapi_app.py               ← FastAPI backend
-├── pipeline.py                  ← Main orchestrator
-├── streamlit_app.py             ← Web demo UI
-├── config.py                    ← API keys, model names, constants
-├── env_utils.py                 ← Local .env loader
-├── requirements.txt
-├── .env                         ← Local-only API keys (not committed)
-│
-├── modules/
-│   ├── atomicizer.py            ← Step 1: atomic decomposition
-│   ├── query_generator.py       ← Step 2: adversarial queries
-│   ├── retriever.py             ← Step 3: hybrid retrieval (parallel)
-│   ├── judge.py                 ← Step 4: LLM judge (Groq 70B)
-│   ├── deep_verifier.py         ← Step 4b: LangChain + Gemini fallback
-│   ├── cove_loop.py             ← Step 5: CoVe meta-verification ★
-│   ├── editor.py                ← Step 6: surgical text editor
-│   └── gemini_pdf_reader.py     ← Gemini Flash PDF reader
-│
-├── baselines/
-│   ├── baseline_zeroshot.py     ← Zero-shot LLM baseline
-│   ├── baseline_standard_rag.py ← Standard RAG baseline
-│   └── baseline_rarr.py         ← Vanilla RARR baseline
-│
-├── evaluation/
-│   ├── skeptic_score.py         ← Detection F1 + Skeptic Score metric
-│   ├── compare_all.py           ← Paper Table 1 generator
-│   └── ablation.py              ← Ablation study
-│
-├── build_dataset/
-│   ├── groq_utils.py            ← Rate-limit retry wrapper
-│   ├── complete_skepticbench.py ← Generate from CSV
-│   └── generate_new_entries.py  ← Auto-generate from arXiv
-│
-└── data/
-    ├── skepticbench_sample.json ← 5 entries for quick testing
-    └── skepticbench_full.json   ← Full 66-entry benchmark
+|-- pipeline.py
+|-- modules/
+|   |-- atomicizer.py
+|   |-- consistency_checker.py
+|   |-- confidence_scorer.py
+|   |-- query_generator.py
+|   |-- retriever.py
+|   |-- judge.py
+|   |-- deep_verifier.py
+|   |-- cove_loop.py
+|   |-- editor.py
+|   `-- gemini_pdf_reader.py
+|-- baselines/
+|-- evaluation/
+|-- data/
+`-- build_dataset/
 ```
 
 ---
 
-## Building the Dataset
+## Setup
+
+### Requirements
+
+- Python 3.12+
+- Groq API key
+- Gemini API key optional but recommended
+
+### Install
 
 ```bash
-# Generate from your own CSV of papers
-python build_dataset/complete_skepticbench.py \
-    --csv data/skeptic_dataset.csv \
-    --out data/skepticbench_25.json
+pip install -r requirements.txt
+```
 
-# Auto-generate new entries from arXiv
-python build_dataset/generate_new_entries.py \
-    --count 75 \
-    --out data/skepticbench_new75.json
+### Environment
 
-# Merge datasets
-python build_dataset/merge_datasets.py \
-    --inputs data/skepticbench_25.json data/skepticbench_new75.json \
-    --out data/skepticbench_full.json
+Create `.env`:
 
-# Verify
-python build_dataset/verify_dataset.py --json data/skepticbench_full.json
+```bash
+GROQ_API_KEY=your_key_here
+GEMINI_API_KEY=your_key_here
 ```
 
 ---
 
-## Running Evaluation
+## Usage
+
+### Run the pipeline
 
 ```bash
-# Full system vs 3 baselines (generates paper Table 1)
+python pipeline.py --text "BERT achieved 80.5% F1 on SQuAD 2.0."
+```
+
+### Run evaluation
+
+```bash
 python evaluation/compare_all.py
-
-# Ablation study (Step 3.5 of paper)
-python evaluation/ablation.py
 ```
 
----
+### Run the API
 
-## Models Used
-
-| Component | Model | Why |
-|---|---|---|
-| Judge | `llama-3.3-70b-versatile` (Groq) | Strongest free-tier reasoning |
-| Atomicizer | `llama-3.1-8b-instant` (Groq) | Fast, sufficient for decomposition |
-| Query generator | `llama-3.1-8b-instant` (Groq) | Fast, saves token budget |
-| Second opinion | `gemini-2.0-flash` (Google) | Native PDF reading, large context |
-| Dataset generation | `llama-3.1-8b-instant` (Groq) | High token limit (131k/min) |
+```bash
+uvicorn fastapi_app:app --host 127.0.0.1 --port 8000
+```
 
 ---
 
 ## Limitations
 
-- Venue/conference errors (ICML vs NeurIPS) are rarely detectable — conference names do not appear in arXiv abstracts
-- Hyperparameter errors require Gemini PDF reading — values like LoRA rank appear only in results tables, not abstracts
-- The system is domain-specific to AI/ML papers — optimised for arXiv papers, not general web content
-- Groq free tier: 100k tokens/day on the 70B model — the full 66-entry benchmark requires overnight running or multiple API keys
+- Venue errors are often absent from abstracts and can remain hard to verify.
+- Some architecture or hyperparameter claims require PDF-level inspection rather than abstract-only evidence.
+- The system is tuned for AI/ML paper summaries, not arbitrary web claims.
+- Free-tier Groq and Gemini rate limits constrain benchmark scale.
+
+---
+
+<details>
+<summary>Examiner FAQ</summary>
+
+**Q: What is novel?**  
+Adversarial query generation plus the cross-claim consistency graph. Neither appears in RARR, FActScore, or SAFE.
+
+**Q: Why does Precision = 1.0 not look cherry-picked?**  
+MetaJudge uses CoVe meta-verification and requires a verbatim evidence quote before confirming a contradiction. That intentionally trades recall for very low false positives, which is appropriate for a correction system where false edits are worse than missed detections.
+
+**Q: How does it compare to FActScore?**  
+FActScore evaluates factual precision of generated text. MetaJudge performs factual detection and surgical correction. They overlap in atomic factual checking, but the task scope is different.
+
+**Q: Is the dataset too small?**  
+SkepticBench is smaller than broad web-claim benchmarks, but it is tightly labeled around explicit corruptions with identifiable sources. That makes correction accuracy measurable.
+
+**Q: What are the main limitations?**  
+Venue detection is weak from abstracts alone, the system is domain-specific to AI/ML papers, and provider rate limits constrain scale.
+
+</details>
 
 ---
 
@@ -328,23 +194,11 @@ python evaluation/ablation.py
 
 ```bibtex
 @misc{shah2026metajudgeai,
-  title   = {MetaJudge AI: Meta-Verification of LLM Judges through Adversarial Falsification for Hallucination Correction},
-  author  = {Shah, Aniket},
-  year    = {2026},
-  note    = {B.Tech Final Year Project, Bharati Vidyapeeth's College of Engineering},
-  url     = {https://github.com/AyushS1304/MetaJudge-AI}
+  title    = {MetaJudge AI: Adversarial Falsification and Cross-Claim Consistency for Hallucination Detection in Scientific Summaries},
+  author   = {Shah, Aniket},
+  year     = {2026},
+  note     = {B.Tech Final Year Project, Bharati Vidyapeeth's College of Engineering},
+  keywords = {hallucination detection, adversarial retrieval, chain-of-verification, scientific fact-checking, RAG},
+  url      = {https://github.com/AyushS1304/MetaJudge-AI}
 }
 ```
-
----
-
-## References
-
-1. Dhuliawala et al. (2023) — Chain-of-Verification Reduces Hallucination in LLMs
-2. Gao et al. (2022) — RARR: Researching and Revising What Language Models Say
-3. Min et al. (2023) — FActScore: Fine-grained Atomic Evaluation of Factual Precision
-4. Lewis et al. (2020) — Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks
-
----
-
-*Built as B.Tech Final Year Project — Bharati Vidyapeeth's College of Engineering, Delhi | Feb 2026*

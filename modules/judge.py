@@ -83,15 +83,33 @@ def judge_claim(fact: str, evidence_block: str) -> dict:
         "Return your judgment as JSON."
     )
 
-    response = client.chat.completions.create(
-        model=JUDGE_MODEL,
-        messages=[
-            {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user",   "content": user_msg},
-        ],
-        temperature=0.0,
-        max_tokens=512,
-    )
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "user", "content": user_msg},
+    ]
+
+    try:
+        response = client.chat.completions.create(
+            model=JUDGE_MODEL,
+            messages=messages,
+            temperature=0.0,
+            max_tokens=512,
+        )
+    except Exception:
+        try:
+            response = client.chat.completions.create(
+                model=FAST_MODEL,
+                messages=messages,
+                temperature=0.0,
+                max_tokens=512,
+            )
+        except Exception:
+            return {
+                "verdict": VERDICT_INSUFFICIENT,
+                "reasoning": "Judge request failed.",
+                "evidence_quote": "",
+                "evidence_source": "",
+            }
 
     raw = response.choices[0].message.content.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw)

@@ -12,6 +12,7 @@ dependencies = [
     "google-genai>=1.73.1",
     "groq>=1.2.0",
     "langchain-community>=0.4.1",
+    "matplotlib>=3.10.1",
     "pandas>=3.0.2",
     "pymupdf>=1.27.2.3",
     "python-dotenv>=1.2.2",

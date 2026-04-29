@@ -20,7 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from groq import Groq
 from modules.retriever import retrieve_evidence, format_evidence_block
-from config import GROQ_API_KEY, STRONG_MODEL
+from config import GROQ_API_KEY, FAST_MODEL, STRONG_MODEL
 
 client = Groq(api_key=GROQ_API_KEY)
 
@@ -37,15 +37,24 @@ def _supportive_query(sentence: str) -> str:
     return sentence  # Just use the claim itself as the query
 
 def _judge_sentence(sentence: str, evidence_block: str) -> dict:
-    raw = client.chat.completions.create(
-        model=STRONG_MODEL,
-        messages=[
-            {"role": "system", "content": JUDGE_PROMPT},
-            {"role": "user",   "content": f"CLAIM: {sentence}\n\nEVIDENCE: {evidence_block}\n\nReturn JSON."}
-        ],
-        temperature=0.0,
-        max_tokens=256,
-    ).choices[0].message.content.strip()
+    messages = [
+        {"role": "system", "content": JUDGE_PROMPT},
+        {"role": "user", "content": f"CLAIM: {sentence}\n\nEVIDENCE: {evidence_block}\n\nReturn JSON."},
+    ]
+    try:
+        raw = client.chat.completions.create(
+            model=STRONG_MODEL,
+            messages=messages,
+            temperature=0.0,
+            max_tokens=256,
+        ).choices[0].message.content.strip()
+    except Exception:
+        raw = client.chat.completions.create(
+            model=FAST_MODEL,
+            messages=messages,
+            temperature=0.0,
+            max_tokens=256,
+        ).choices[0].message.content.strip()
 
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$",          "", raw)
@@ -54,31 +63,44 @@ def _judge_sentence(sentence: str, evidence_block: str) -> dict:
     except Exception:
         return {"verdict": "INSUFFICIENT_EVIDENCE", "reasoning": "Parse error."}
 
-def run_standard_rag(summary: str, verbose: bool = True) -> dict:
+def run_standard_rag(
+    summary: str,
+    verbose: bool = True,
+    *,
+    sentences_override: list[str] | None = None,
+    sleep_seconds: float = 0.3,
+) -> dict:
     """
     Run Standard RAG pipeline (baseline).
     Works at sentence level, no adversarial queries, no CoVe.
     """
-    sentences = [s.strip() + "." for s in summary.replace(".\n", ". ").split(". ") if len(s.strip()) > 10]
+    sentences = (
+        [sentence.strip() for sentence in sentences_override if str(sentence).strip()]
+        if sentences_override
+        else [s.strip() + "." for s in summary.replace(".\n", ". ").split(". ") if len(s.strip()) > 10]
+    )
     results = []
 
     if verbose:
         print("\n[Baseline: Standard RAG]")
 
-    for sent in sentences:
+    for index, sent in enumerate(sentences):
         query    = _supportive_query(sent)
         evidence = retrieve_evidence([query])
         ev_block = format_evidence_block(evidence)
         verdict  = _judge_sentence(sent, ev_block)
 
         results.append({
+            "claim_index": index,
             "sentence": sent,
             "verdict":  verdict.get("verdict", "INSUFFICIENT_EVIDENCE"),
             "reasoning": verdict.get("reasoning", ""),
+            "correction": "",
         })
         if verbose:
             print(f"  {verdict.get('verdict','?'):28s} | {sent[:70]}")
-        time.sleep(0.3)
+        if sleep_seconds > 0:
+            time.sleep(sleep_seconds)
 
     contradictions = [r for r in results if r["verdict"] == "CONTRADICTED"]
     return {
