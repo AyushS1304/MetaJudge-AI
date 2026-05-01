@@ -17,7 +17,6 @@ from collections import defaultdict
 from collections.abc import Callable
 from typing import Any
 
-import modules.judge as judge_module
 from config import MAX_FACTS
 from evaluation.skeptic_score import BenchmarkReport, ClaimResult
 from modules.atomicizer import atomicize
@@ -35,6 +34,7 @@ from modules.text_utils import find_best_matching_sentence
 SEPARATOR = "=" * 60
 VERDICT_INTERNAL_CONTRADICTION = "INTERNAL_CONTRADICTION"
 PipelineEventCallback = Callable[[dict[str, Any]], None]
+StageCallback = Callable[[str, Any, float], None]
 
 
 def _emit(callback: PipelineEventCallback | None, event_type: str, **payload: Any) -> None:
@@ -133,8 +133,12 @@ def run_pipeline(
     summary: str,
     verbose: bool = True,
     *,
-    gemini_key: str | None = None,
+    mode: str = "full",
+    skip_cove: bool = False,
+    adversarial_queries: bool = True,
+    skip_consistency: bool = False,
     on_event: PipelineEventCallback | None = None,
+    stage_callback: StageCallback | None = None,
     sleep_seconds: float = 0.3,
     use_consistency_checker: bool = True,
     use_adversarial_queries: bool = True,
@@ -144,10 +148,26 @@ def run_pipeline(
 ) -> dict[str, Any]:
     """
     Run the full MetaJudge pipeline on a summary.
+
+    Args:
+        summary: Text to fact-check.
+        verbose: Print progress to stdout.
+        mode: "fast" (skip deep verifier) or "full".
+        on_event: Event callback for SSE streaming.
+        stage_callback: Called after each stage with (stage_name, result, duration_ms).
+        sleep_seconds: Delay between facts for rate-limiting.
+        use_consistency_checker: Enable cross-claim consistency checking.
+        use_adversarial_queries: Enable adversarial query generation.
+        use_deep_verifier: Enable deep verification escalation.
+        use_cove: Enable CoVe meta-verification.
+        facts_override: Override atomicizer with pre-defined facts.
     """
     summary = summary.strip()
     if not summary:
         raise ValueError("summary cannot be empty")
+
+    if mode == "fast":
+        use_deep_verifier = False
 
     if verbose:
         print(f"\n{SEPARATOR}")
@@ -159,7 +179,12 @@ def run_pipeline(
     _emit(on_event, "log", kind="step", message="Step 1: Atomicizing summary...")
     _log(verbose, "[Step 1] Atomic decomposition...")
 
+    t0 = time.time()
     facts = [fact.strip() for fact in (facts_override or atomicize(summary)) if str(fact).strip()][:MAX_FACTS]
+    stage_dur = (time.time() - t0) * 1000
+    if stage_callback:
+        stage_callback("atomicizer", {"facts": facts}, stage_dur)
+
     _emit(on_event, "log", kind="done", message=f"  -> {len(facts)} atomic facts extracted")
     _log(verbose, f"  -> {len(facts)} atomic facts extracted.")
 
@@ -174,13 +199,25 @@ def run_pipeline(
     }
     contradiction_map: dict[int, list[tuple[int, str, str]]] = defaultdict(list)
 
-    if use_consistency_checker and len(facts) > 1:
-        internal_contradictions = check_cross_claim_consistency(facts, judge_module.client)
+    t0 = time.time()
+    if use_consistency_checker and len(facts) > 1 and not skip_consistency:
+        internal_contradictions = check_cross_claim_consistency(facts)
         for i, j, _, _, reason, contradiction_type in internal_contradictions["contradicting_pairs"]:
             contradiction_map[i].append((j, reason, contradiction_type))
             contradiction_map[j].append((i, reason, contradiction_type))
+    elif skip_consistency:
+        internal_contradictions = {
+            "consistency_score": 1.0,
+            "contradicting_pairs": [],
+            "graph_edges": [],
+            "summary": "Skipped for ablation",
+            "skipped": True
+        }
     elif len(facts) <= 1:
         internal_contradictions["summary"] = "Not enough atomic claims for cross-claim consistency checking."
+    stage_dur = (time.time() - t0) * 1000
+    if stage_callback:
+        stage_callback("consistency_checker", internal_contradictions, stage_dur)
 
     _emit(on_event, "log", kind="done", message=f"  -> {internal_contradictions['summary']}")
     _log(verbose, f"  -> {internal_contradictions['summary']}")
@@ -188,7 +225,7 @@ def run_pipeline(
     corrections: list[dict[str, Any]] = []
     all_results: list[dict[str, Any]] = []
     total_facts = len(facts)
-    gemini_requested = bool((gemini_key or os.environ.get("GEMINI_API_KEY")) and use_deep_verifier)
+    gemini_requested = False  # No Gemini — kept for data compat
 
     for index, fact in enumerate(facts, start=1):
         claim_index = index - 1
@@ -232,16 +269,30 @@ def run_pipeline(
             if use_adversarial_queries
             else "  [Step 2] Generating standard search queries...",
         )
-        queries = generate_skeptical_queries(fact) if use_adversarial_queries else _standard_queries(fact)
+        t0 = time.time()
+        if adversarial_queries and use_adversarial_queries:
+            queries = generate_skeptical_queries(fact)
+        else:
+            queries = [
+                f"What is {fact}?",
+                f"Information about {fact}"
+            ]
+        stage_dur = (time.time() - t0) * 1000
+        if stage_callback and claim_index == 0:
+            stage_callback("query_generator", {"queries": queries}, stage_dur)
         for query in queries:
             _emit(on_event, "log", kind="info", message=f"  -> {query[:75]}")
             _log(verbose, f"    -> {query}")
 
         _emit(on_event, "log", kind="step", message="Step 3: Retrieving evidence...")
         _log(verbose, "  [Step 3] Retrieving evidence (arXiv + web)...")
+        t0 = time.time()
         evidence = retrieve_evidence(queries, fact=fact, context=summary)
         evidence_block = format_evidence_block(evidence)
         evidence_sources = [item.get("source", "") for item in evidence]
+        stage_dur = (time.time() - t0) * 1000
+        if stage_callback and claim_index == 0:
+            stage_callback("retriever", {"evidence_count": len(evidence)}, stage_dur)
         _emit(
             on_event,
             "log",
@@ -250,10 +301,14 @@ def run_pipeline(
         )
         _log(verbose, f"    -> {len(evidence)} evidence items retrieved.")
 
-        _emit(on_event, "log", kind="step", message="Step 4: Groq judge evaluating claim...")
+        _emit(on_event, "log", kind="step", message="Step 4: Judge evaluating claim...")
         _log(verbose, "  [Step 4] Judging claim...")
+        t0 = time.time()
         judge_result = judge_claim(fact, evidence_block)
         deep_verifier_used = False
+        stage_dur = (time.time() - t0) * 1000
+        if stage_callback and claim_index == 0:
+            stage_callback("judge", {"verdict": judge_result["verdict"]}, stage_dur)
         _emit(
             on_event,
             "log",
@@ -264,7 +319,7 @@ def run_pipeline(
                 if judge_result["verdict"] == VERDICT_CONTRADICTED
                 else "info"
             ),
-            message=f"  -> Groq verdict: {judge_result['verdict']}",
+            message=f"  -> Judge verdict: {judge_result['verdict']}",
         )
         if judge_result.get("reasoning"):
             _emit(on_event, "log", kind="info", message=f"  -> {judge_result['reasoning'][:90]}")
@@ -273,19 +328,13 @@ def run_pipeline(
 
         if judge_result["verdict"] == VERDICT_INSUFFICIENT and use_deep_verifier:
             deep_verifier_used = True
-            _emit(
-                on_event,
-                "log",
-                kind="gemini" if gemini_requested else "step",
-                message="Step 4b: Deep verification...",
-            )
+            _emit(on_event, "log", kind="step", message="Step 4b: Deep verification...")
             _log(verbose, "  [Step 4b] Deep verification...")
             second_result = deep_verify(
                 fact,
                 summary,
                 evidence_block,
                 KNOWN_PAPERS,
-                gemini_key=gemini_key or "",
                 verbose=verbose,
             )
             judge_result = _merge_deep_verification_result(
@@ -298,7 +347,7 @@ def run_pipeline(
                 _emit(
                     on_event,
                     "log",
-                    kind="gemini" if gemini_requested else "info",
+                    kind="info",
                     message="  -> Deep verification could not settle the claim; marked disputed",
                 )
                 _log(verbose, "    -> Could not verify; marked disputed.")
@@ -306,14 +355,12 @@ def run_pipeline(
                 source_suffix = (
                     " (PDF)"
                     if judge_result.get("pdf_used")
-                    else " (Gemini)"
-                    if judge_result.get("gemini_used")
                     else " (enriched search)"
                 )
                 _emit(
                     on_event,
                     "log",
-                    kind="gemini" if judge_result["verdict"] == VERDICT_CONTRADICTED else "done",
+                    kind="done" if judge_result["verdict"] != VERDICT_CONTRADICTED else "err",
                     message=f"  -> Deep verify{source_suffix}: {judge_result['verdict']}",
                 )
                 _log(verbose, f"    -> Deep verify verdict: {judge_result['verdict']}")
@@ -326,21 +373,34 @@ def run_pipeline(
                 _log(verbose, "  [Step 4b] Deep verification skipped.")
 
         if judge_result["verdict"] == VERDICT_CONTRADICTED and use_cove:
-            _emit(on_event, "log", kind="step", message="Step 5: CoVe meta-verification...")
-            _log(verbose, "  [Step 5] CoVe activated - verifying judge decision...")
-            final_result = run_cove_verification(fact, judge_result, evidence_block)
-            _emit(
-                on_event,
-                "log",
-                kind="done" if final_result.get("cove_meta_verdict") == "CONFIRMED_CONTRADICTION" else "err",
-                message=f"  -> CoVe: {final_result.get('cove_meta_verdict')}",
-            )
-            _log(verbose, f"    -> CoVe meta-verdict: {final_result.get('cove_meta_verdict')}")
-            _log(verbose, f"    -> Final verdict:     {final_result['verdict']}")
+            if not skip_cove:
+                _emit(on_event, "log", kind="step", message="Step 5: CoVe meta-verification...")
+                _log(verbose, "  [Step 5] CoVe activated - verifying judge decision...")
+                t0 = time.time()
+                final_result = run_cove_verification(fact, judge_result, evidence_block)
+                stage_dur = (time.time() - t0) * 1000
+                if stage_callback and claim_index == 0:
+                    stage_callback("cove_loop", {"meta_verdict": final_result.get("cove_meta_verdict")}, stage_dur)
+                _emit(
+                    on_event,
+                    "log",
+                    kind="done" if final_result.get("cove_meta_verdict") == "CONFIRMED_CONTRADICTION" else "err",
+                    message=f"  -> CoVe: {final_result.get('cove_meta_verdict')}",
+                )
+                _log(verbose, f"    -> CoVe meta-verdict: {final_result.get('cove_meta_verdict')}")
+                _log(verbose, f"    -> Final verdict:     {final_result['verdict']}")
+            else:
+                final_result = dict(judge_result)
+                final_result["cove_verified"] = True
+                final_result["cove_skipped"] = True
+                final_result["cove_reversed"] = False
+                _emit(on_event, "log", kind="step", message="Step 5: CoVe skipped for ablation")
+                _log(verbose, "  [Step 5] CoVe skipped for ablation.")
         else:
             final_result = dict(judge_result)
             final_result["cove_applied"] = False
             final_result["cove_meta_verdict"] = None
+            final_result["cove_reversed"] = False
             _emit(
                 on_event,
                 "log",
@@ -372,6 +432,7 @@ def run_pipeline(
         if _should_apply_editor(final_result, use_cove=use_cove):
             _emit(on_event, "log", kind="step", message="Step 6: Applying surgical correction...")
             _log(verbose, "  [Step 6] Applying surgical correction...")
+            t0 = time.time()
             source_sentence = find_best_matching_sentence(summary, fact)
             edit_result = edit_sentence(
                 original_sentence=source_sentence,
@@ -379,6 +440,9 @@ def run_pipeline(
                 cove_result=final_result,
                 evidence_block=evidence_block,
             )
+            stage_dur = (time.time() - t0) * 1000
+            if stage_callback and claim_index == 0:
+                stage_callback("editor", edit_result, stage_dur)
             if edit_result["changed"]:
                 corrections.append(
                     {
@@ -507,8 +571,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
 
-    if not os.getenv("GROQ_API_KEY"):
-        print("\nGROQ_API_KEY not set. Create a .env file with:\n  GROQ_API_KEY=your_key_here\n")
+    if not os.getenv("NVIDIA_API_KEY"):
+        print("\nNVIDIA_API_KEY not set. Create a .env file with:\n  NVIDIA_API_KEY=your_key_here\n")
         return 1
 
     if args.bench:

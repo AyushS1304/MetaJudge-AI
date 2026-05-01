@@ -8,21 +8,14 @@ Key differences from Skeptical CoVe-RAG:
   ✗ No CoVe verification — judge's word is final
   ✗ No atomic decomposition — verifies full sentences
   ✗ No surgical editor — no correction step
-
-Used in ablation: removing BOTH adversarial retrieval AND CoVe loop.
 """
 
 import re
 import json
 import time
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from groq import Groq
+from modules.nvidia_client import nvidia_chat
 from modules.retriever import retrieve_evidence, format_evidence_block
-from config import GROQ_API_KEY, FAST_MODEL, STRONG_MODEL
-
-client = Groq(api_key=GROQ_API_KEY)
 
 JUDGE_PROMPT = """You are a fact-checker. Given a claim and evidence, decide:
 - SUPPORTED: evidence confirms the claim
@@ -34,7 +27,7 @@ Return ONLY JSON: {"verdict": "...", "reasoning": "one sentence"}
 
 def _supportive_query(sentence: str) -> str:
     """Standard RAG: generate a query to CONFIRM the claim."""
-    return sentence  # Just use the claim itself as the query
+    return sentence
 
 def _judge_sentence(sentence: str, evidence_block: str) -> dict:
     messages = [
@@ -42,19 +35,9 @@ def _judge_sentence(sentence: str, evidence_block: str) -> dict:
         {"role": "user", "content": f"CLAIM: {sentence}\n\nEVIDENCE: {evidence_block}\n\nReturn JSON."},
     ]
     try:
-        raw = client.chat.completions.create(
-            model=STRONG_MODEL,
-            messages=messages,
-            temperature=0.0,
-            max_tokens=256,
-        ).choices[0].message.content.strip()
+        raw = nvidia_chat(messages, role="judge", temperature=0.0, max_tokens=256)
     except Exception:
-        raw = client.chat.completions.create(
-            model=FAST_MODEL,
-            messages=messages,
-            temperature=0.0,
-            max_tokens=256,
-        ).choices[0].message.content.strip()
+        raw = nvidia_chat(messages, role="fast", temperature=0.0, max_tokens=256)
 
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$",          "", raw)

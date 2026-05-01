@@ -8,8 +8,6 @@ share the same logic in ``modules.deep_verifier``.
 
 from __future__ import annotations
 
-import os
-
 from modules.deep_verifier import deep_verify
 
 
@@ -25,7 +23,6 @@ def get_second_opinion(
         context,
         original_evidence,
         known_papers,
-        gemini_key=os.environ.get("GEMINI_API_KEY", ""),
         verbose=verbose,
     )
 

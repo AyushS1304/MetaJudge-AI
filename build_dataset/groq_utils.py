@@ -1,37 +1,22 @@
 """
 build_dataset/groq_utils.py
 ============================
-Retry wrapper for Groq API calls with exponential backoff.
+Retry wrapper for NVIDIA NIM API calls with exponential backoff.
 Import this in any build_dataset script instead of calling
-client.chat.completions.create() directly.
+the API directly.
 
-Groq free tier limits (per minute):
-  llama-3.3-70b-versatile : 30 req/min, 6,000 tokens/min   ← too slow for bulk
-  llama-3.1-70b-versatile : 30 req/min, 6,000 tokens/min
-  llama-3.1-8b-instant    : 30 req/min, 131,072 tokens/min  ← use this for bulk
-  mixtral-8x7b-32768      : 30 req/min, 5,000 tokens/min
-
-Strategy:
-  - Use llama-3.1-8b-instant for dataset generation (bulk, high token limit)
-  - Use llama-3.3-70b-versatile only for pipeline judge + CoVe (accuracy matters)
-  - Retry up to 5 times with exponential backoff on rate limit errors
-  - Hard sleep of MIN_DELAY seconds between every call
+Replaces the original Groq-based utility.
 """
 
 import time
-import os
-from groq import Groq, RateLimitError, APIStatusError
-from dotenv import load_dotenv
 
-load_dotenv()
+from modules.nvidia_client import nvidia_chat
 
-client = Groq(api_key=os.getenv("GROQ_API_KEY", ""))
+# Model alias for bulk generation
+BULK_MODEL   = "fast"       # maps to meta/llama-3.1-8b-instruct
+STRONG_MODEL = "judge"      # maps to nvidia/llama-3.1-nemotron-70b-instruct
 
-# Use the 8B model for bulk generation — 131k tokens/min vs 6k for 70B
-BULK_MODEL   = "llama-3.1-8b-instant"
-STRONG_MODEL = "llama-3.3-70b-versatile"
-
-MIN_DELAY    = 2.5   # seconds between every call (stays under 30 req/min)
+MIN_DELAY    = 2.5   # seconds between every call
 MAX_RETRIES  = 5
 
 
@@ -42,37 +27,33 @@ def call_groq(
     max_tokens: int = 1500,
 ) -> str:
     """
-    Call Groq with automatic retry on rate limit errors.
+    Call NVIDIA NIM with automatic retry on rate limit errors.
     Returns the response text or raises after MAX_RETRIES attempts.
+
+    The function name is kept as call_groq for backwards compatibility
+    with existing build_dataset scripts.
     """
+    # Map old model strings to nvidia_client roles
+    role = model if model in ("fast", "judge", "editor", "escalation") else "fast"
+
     for attempt in range(1, MAX_RETRIES + 1):
         try:
-            time.sleep(MIN_DELAY)   # always wait before calling
-            response = client.chat.completions.create(
-                model=model,
-                messages=messages,
+            time.sleep(MIN_DELAY)
+            return nvidia_chat(
+                messages,
+                role=role,
                 temperature=temperature,
                 max_tokens=max_tokens,
             )
-            return response.choices[0].message.content.strip()
-
-        except RateLimitError as e:
-            wait = min(2 ** attempt * 10, 120)   # 20s, 40s, 80s, 120s, 120s
-            print(f"    [rate limit] attempt {attempt}/{MAX_RETRIES} — waiting {wait}s...")
-            time.sleep(wait)
-
-        except APIStatusError as e:
-            if e.status_code == 429:
+        except RuntimeError as e:
+            if "429" in str(e) or "rate" in str(e).lower():
                 wait = min(2 ** attempt * 10, 120)
-                print(f"    [429 error] attempt {attempt}/{MAX_RETRIES} — waiting {wait}s...")
+                print(f"    [rate limit] attempt {attempt}/{MAX_RETRIES} — waiting {wait}s...")
                 time.sleep(wait)
+            elif attempt == MAX_RETRIES:
+                raise
             else:
-                raise
+                print(f"    [error] {e} — retrying in 5s...")
+                time.sleep(5)
 
-        except Exception as e:
-            if attempt == MAX_RETRIES:
-                raise
-            print(f"    [error] {e} — retrying in 5s...")
-            time.sleep(5)
-
-    raise RuntimeError(f"Groq call failed after {MAX_RETRIES} attempts")
+    raise RuntimeError(f"API call failed after {MAX_RETRIES} attempts")

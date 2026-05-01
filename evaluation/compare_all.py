@@ -266,7 +266,7 @@ def run_full_comparison(bench_path: str = BENCH_PATH) -> dict[str, Any]:
         "Full system": {},
         "- Adversarial queries (standard search only)": {"use_adversarial_queries": False},
         "- CoVe meta-judge (no Step 5)": {"use_cove": False},
-        "- Gemini PDF fallback (no Step 4b)": {"use_deep_verifier": False},
+        "- Deep verifier / escalation (no Step 4b)": {"use_deep_verifier": False},
         "- Consistency checker (no Step 1.5)": {"use_consistency_checker": False},
     }
 

@@ -1,30 +1,21 @@
 """
-evaluation/ablation.py — Ablation Study Runner
-------------------------------------------------
+evaluation/ablation.py — Ablation Study Runner (Legacy)
+--------------------------------------------------------
+See evaluation/ablation_runner.py for the updated 4-config version.
+
 Runs the three ablation conditions described in the paper:
-
   Ablation 1: Remove CoVe Loop
-    → Measures how much "Verifying the Verifier" reduces false positives.
-    → All CONTRADICTED verdicts are accepted without meta-verification.
-
   Ablation 2: Remove Skeptical Query Generator
-    → Reduces system to supportive RAG with atomic decomp + CoVe.
-    → Measures the impact of adversarial retrieval alone.
-
   Ablation 3: Remove Atomic Decomposition
-    → Verifies at sentence level instead of atomic facts.
-    → Measures the importance of granularity.
-
-Each ablation runs on the same SkepticBench entries and reports
-Detection F1 + Skeptic Score so you can compare against the full system.
 """
 
 import json
 import time
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from config import MAX_FACTS, GROQ_API_KEY
+from config import MAX_FACTS
 from modules.atomicizer      import atomicize
 from modules.query_generator import generate_skeptical_queries
 from modules.retriever       import retrieve_evidence, format_evidence_block
@@ -35,8 +26,6 @@ from evaluation.skeptic_score import BenchmarkReport, ClaimResult
 SEPARATOR = "─" * 55
 
 
-# ─── ABLATION 1: No CoVe ──────────────────────────────────────────────────────
-
 def run_no_cove(summary: str, verbose: bool = False) -> list[dict]:
     """Full pipeline MINUS the CoVe verification loop."""
     facts   = atomicize(summary)[:MAX_FACTS]
@@ -46,7 +35,6 @@ def run_no_cove(summary: str, verbose: bool = False) -> list[dict]:
         evidence = retrieve_evidence(queries)
         ev_block = format_evidence_block(evidence)
         verdict  = judge_claim(fact, ev_block)
-        # CoVe SKIPPED — accept judge at face value
         verdict["fact"]             = fact
         verdict["cove_applied"]     = False
         verdict["cove_meta_verdict"] = None
@@ -55,14 +43,11 @@ def run_no_cove(summary: str, verbose: bool = False) -> list[dict]:
     return results
 
 
-# ─── ABLATION 2: No Adversarial Queries ───────────────────────────────────────
-
 def run_no_adversarial(summary: str, verbose: bool = False) -> list[dict]:
-    """Full pipeline MINUS adversarial query generation (uses supportive queries)."""
+    """Full pipeline MINUS adversarial query generation."""
     facts   = atomicize(summary)[:MAX_FACTS]
     results = []
     for fact in facts:
-        # Supportive query: just use the fact itself
         queries  = [fact, f"information about {fact}"]
         evidence = retrieve_evidence(queries)
         ev_block = format_evidence_block(evidence)
@@ -77,8 +62,6 @@ def run_no_adversarial(summary: str, verbose: bool = False) -> list[dict]:
         time.sleep(0.3)
     return results
 
-
-# ─── ABLATION 3: No Atomic Decomposition ─────────────────────────────────────
 
 def run_no_atomic(summary: str, verbose: bool = False) -> list[dict]:
     """Full pipeline MINUS atomic decomposition (operates at sentence level)."""
@@ -100,12 +83,8 @@ def run_no_atomic(summary: str, verbose: bool = False) -> list[dict]:
     return results
 
 
-# ─── BENCHMARK RUNNER ─────────────────────────────────────────────────────────
-
 def run_ablation_study(bench_path: str = "data/skepticbench_sample.json"):
-    """
-    Run all ablation conditions on SkepticBench and compare reports.
-    """
+    """Run all ablation conditions on SkepticBench and compare."""
     with open(bench_path) as f:
         bench = json.load(f)
 
@@ -134,7 +113,6 @@ def run_ablation_study(bench_path: str = "data/skepticbench_sample.json"):
                     cove_meta_verdict = res.get("cove_meta_verdict"),
                 ))
 
-    # ── Print comparison table ─────────────────────────────────────────────
     print(f"\n\n{'='*55}")
     print("  ABLATION STUDY RESULTS")
     print(f"{'='*55}")
@@ -151,15 +129,11 @@ def run_ablation_study(bench_path: str = "data/skepticbench_sample.json"):
         )
 
     print(f"{'='*55}")
-    print("\n  Interpretation:")
-    print("  • 'No CoVe' vs full: shows false-positive reduction from CoVe")
-    print("  • 'No Adversarial' vs full: shows impact of skeptical queries")
-    print("  • 'No Atomic Decomp' vs full: shows granularity contribution")
     return reports
 
 
 if __name__ == "__main__":
-    if not os.getenv("GROQ_API_KEY"):
-        print("⚠  Set GROQ_API_KEY in .env first.")
+    if not os.getenv("NVIDIA_API_KEY"):
+        print("⚠  Set NVIDIA_API_KEY in .env first.")
         sys.exit(1)
     run_ablation_study()

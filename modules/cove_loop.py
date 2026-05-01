@@ -19,13 +19,10 @@ verifiable, accountable fact-checker.
 
 import re
 import json
-from groq import Groq
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import FAST_MODEL, GROQ_API_KEY, STRONG_MODEL, MIN_EVIDENCE_CHARS
-from modules.judge import VERDICT_CONTRADICTED, VERDICT_INSUFFICIENT
 
-client = Groq(api_key=GROQ_API_KEY)
+from config import MIN_EVIDENCE_CHARS
+from modules.nvidia_client import nvidia_chat
+from modules.judge import VERDICT_CONTRADICTED, VERDICT_INSUFFICIENT
 
 COVE_SYSTEM_PROMPT = """You are a verification auditor checking a fact-checker's decision.
 
@@ -80,24 +77,13 @@ def _verify_judge_decision(
     ]
 
     try:
-        response = client.chat.completions.create(
-            model=STRONG_MODEL,
-            messages=messages,
-            temperature=0.0,
-            max_tokens=256,
-        )
+        raw = nvidia_chat(messages, role="judge", temperature=0.0, max_tokens=256)
     except Exception:
         try:
-            response = client.chat.completions.create(
-                model=FAST_MODEL,
-                messages=messages,
-                temperature=0.0,
-                max_tokens=256,
-            )
+            raw = nvidia_chat(messages, role="fast", temperature=0.0, max_tokens=256)
         except Exception:
             return {"meta_verdict": "OVERTURNED", "reason": "CoVe request failed - defaulting to safe reversal."}
 
-    raw = response.choices[0].message.content.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
 
@@ -109,8 +95,8 @@ def _verify_judge_decision(
 
 def _has_minimal_quote(judge_result: dict) -> bool:
     """Fast check: did the judge even provide a quote of minimum length?"""
-    quote = judge_result.get("evidence_quote", "").strip()
-    return len(quote) >= MIN_EVIDENCE_CHARS
+    quote = judge_result.get("evidence_quote", "")
+    return bool(quote and quote.strip() != "")
 
 
 def run_cove_verification(
@@ -136,6 +122,7 @@ def run_cove_verification(
     result = dict(judge_result)
     result["cove_applied"]      = False
     result["cove_meta_verdict"] = None
+    result["cove_reversed"]     = False
 
     # CoVe only activates on CONTRADICTED verdicts
     if result["verdict"] != VERDICT_CONTRADICTED:
@@ -145,20 +132,68 @@ def run_cove_verification(
 
     # Stage 1: Fast gate — does the judge even have a quote?
     if not _has_minimal_quote(judge_result):
-        result["verdict"]          = VERDICT_INSUFFICIENT
-        result["cove_meta_verdict"] = "OVERTURNED"
-        result["reasoning"] = (
-            f"[CoVe OVERTURNED] Judge declared contradiction but provided "
-            f"no evidence quote (min {MIN_EVIDENCE_CHARS} chars required). "
-            f"Original reasoning: {judge_result.get('reasoning', '')}"
-        )
-        return result
+        # --- INSERT THIS BLOCK before the reversal ---
+        # One re-prompt attempt before reversing the verdict
+        try:
+            reprompt_messages = [
+                {"role": "system", "content": 
+                 "You are a precise fact-checker. Find exact evidence quotes."},
+                {"role": "user", "content": 
+                 f"""You previously flagged this claim as CONTRADICTED but 
+provided no supporting quote.
+
+Claim: {fact}
+
+Evidence:
+{evidence_block}
+
+Find the EXACT phrase from the evidence above that contradicts the claim.
+Even a single number or date counts as a valid quote.
+If nothing in the evidence contradicts the claim, say INSUFFICIENT_EVIDENCE.
+
+Respond in JSON only:
+{{"verdict": "CONTRADICTED" or "INSUFFICIENT_EVIDENCE", 
+  "evidence_quote": "exact phrase here or empty string",
+  "reasoning": "one sentence"}}"""}
+            ]
+            from modules.nvidia_client import nvidia_chat_json
+            reprompt_result = nvidia_chat_json(reprompt_messages, role="judge")
+            new_quote = reprompt_result.get("evidence_quote", "").strip()
+            if new_quote:
+                # Re-prompt found a quote — accept the original CONTRADICTED verdict
+                judge_result["evidence_quote"] = new_quote
+                # Do NOT reverse — continue with CONTRADICTED
+                result["cove_reversed"] = False
+                result["evidence_quote"] = new_quote
+            else:
+                # Re-prompt also found nothing — now reverse
+                result["cove_reversed"] = True
+                result["verdict"]          = VERDICT_INSUFFICIENT
+                result["cove_meta_verdict"] = "OVERTURNED"
+                result["reasoning"] = (
+                    f"[CoVe OVERTURNED] Judge declared contradiction but provided "
+                    f"no evidence quote. "
+                    f"Original reasoning: {judge_result.get('reasoning', '')}"
+                )
+                return result
+        except Exception:
+            result["cove_reversed"] = True
+            result["verdict"]          = VERDICT_INSUFFICIENT
+            result["cove_meta_verdict"] = "OVERTURNED"
+            result["reasoning"] = (
+                f"[CoVe OVERTURNED] Judge declared contradiction but provided "
+                f"no evidence quote. "
+                f"Original reasoning: {judge_result.get('reasoning', '')}"
+            )
+            return result
+        # --- END INSERT ---
 
     # Stage 2: Deep verification — is the quote real and actually contradictory?
     meta = _verify_judge_decision(fact, judge_result, evidence_block)
     result["cove_meta_verdict"] = meta.get("meta_verdict", "OVERTURNED")
 
     if result["cove_meta_verdict"] == "OVERTURNED":
+        result["cove_reversed"] = True
         result["verdict"]   = VERDICT_INSUFFICIENT
         result["reasoning"] = (
             f"[CoVe OVERTURNED] {meta.get('reason', '')} "

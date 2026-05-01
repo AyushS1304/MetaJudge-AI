@@ -13,8 +13,9 @@ import re
 from itertools import combinations
 from typing import Any
 
+from modules.nvidia_client import nvidia_chat, MODELS
 
-CONSISTENCY_MODEL = "llama-3.1-8b-instant"
+CONSISTENCY_MODEL = MODELS["fast"]
 VALID_CONTRADICTION_TYPES = {"numerical", "temporal", "categorical", "relational"}
 
 
@@ -31,12 +32,15 @@ def _parse_model_json(raw: str) -> dict[str, Any]:
     return parsed
 
 
-def check_cross_claim_consistency(claims: list[str], groq_client) -> dict[str, Any]:
+def check_cross_claim_consistency(claims: list[str], _groq_client=None) -> dict[str, Any]:
     """
     Check all atomic-claim pairs for internal contradictions.
 
     Uses `itertools.combinations` over all N*(N-1)/2 pairs, processes them in
     batches of five pairs, and silently skips failed pair checks.
+
+    The _groq_client parameter is kept for API compatibility but is ignored;
+    all calls now go through nvidia_chat.
     """
     indexed_claims = list(enumerate(claims))
     claim_pairs = list(combinations(indexed_claims, 2))
@@ -63,13 +67,13 @@ def check_cross_claim_consistency(claims: list[str], groq_client) -> dict[str, A
                 '"contradiction_type":"numerical|temporal|categorical|relational"}'
             )
             try:
-                response = groq_client.chat.completions.create(
-                    model=CONSISTENCY_MODEL,
-                    messages=[{"role": "user", "content": prompt}],
-                    temperature=0,
+                raw = nvidia_chat(
+                    [{"role": "user", "content": prompt}],
+                    role="fast",
+                    temperature=0.0,
                     max_tokens=180,
                 )
-                parsed = _parse_model_json(response.choices[0].message.content)
+                parsed = _parse_model_json(raw)
             except Exception:
                 continue
 

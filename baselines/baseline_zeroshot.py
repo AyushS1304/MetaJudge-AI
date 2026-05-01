@@ -4,30 +4,20 @@ baselines/baseline_zeroshot.py — Baseline 3: Zero-Shot LLM
 Simulates asking a strong LLM to fact-check using only its
 parametric memory — no retrieval, no tools.
 
-This represents the "just ask the model" approach.
-
 Missing vs Skeptical CoVe-RAG:
   ✗ No retrieval — relies entirely on training knowledge
   ✗ No adversarial framing
   ✗ No CoVe meta-verification
   ✗ Subject to all the biases the model was trained on
-
-In the paper, this baseline shows that LLM parametric memory
-alone cannot reliably catch subtle, technical hallucinations
-(wrong dates, metric values, author attributions).
 """
 
 import re
 import json
 import time
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from groq import Groq
+from modules.nvidia_client import nvidia_chat
 from modules.atomicizer import atomicize
-from config import GROQ_API_KEY, FAST_MODEL, STRONG_MODEL, MAX_FACTS
-
-client = Groq(api_key=GROQ_API_KEY)
+from config import MAX_FACTS
 
 SYSTEM_PROMPT = """You are a knowledgeable fact-checker with expertise in AI/ML research.
 Using ONLY your training knowledge (no search), evaluate each claim.
@@ -63,21 +53,10 @@ def run_zeroshot(
             {"role": "user", "content": f"Fact-check this claim using your knowledge:\n\n{fact}"},
         ]
         try:
-            response = client.chat.completions.create(
-                model=STRONG_MODEL,
-                messages=messages,
-                temperature=0.0,
-                max_tokens=256,
-            )
+            raw = nvidia_chat(messages, role="judge", temperature=0.0, max_tokens=256)
         except Exception:
-            response = client.chat.completions.create(
-                model=FAST_MODEL,
-                messages=messages,
-                temperature=0.0,
-                max_tokens=256,
-            )
+            raw = nvidia_chat(messages, role="fast", temperature=0.0, max_tokens=256)
 
-        raw = response.choices[0].message.content.strip()
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```$",          "", raw)
 
@@ -107,7 +86,6 @@ def run_zeroshot(
 
     contradictions = [r for r in results if r["verdict"] == "CONTRADICTED"]
 
-    # Apply simple string corrections (no surgical editing)
     corrected = summary
     for c in contradictions:
         if c.get("correction"):

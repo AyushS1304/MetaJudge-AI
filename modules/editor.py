@@ -14,12 +14,8 @@ original phrasing must be maintained as much as possible.
 
 import re
 import json
-from groq import Groq
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from config import FAST_MODEL, GROQ_API_KEY, STRONG_MODEL
 
-client = Groq(api_key=GROQ_API_KEY)
+from modules.nvidia_client import nvidia_chat
 
 SYSTEM_PROMPT = """You are a surgical text editor. A specific claim in a text has been proven incorrect.
 Your job is to make the MINIMAL edit to fix it.
@@ -76,20 +72,10 @@ def edit_sentence(
     ]
 
     try:
-        response = client.chat.completions.create(
-            model=STRONG_MODEL,
-            messages=messages,
-            temperature=0.0,
-            max_tokens=512,
-        )
+        raw = nvidia_chat(messages, role="editor", temperature=0.0, max_tokens=512)
     except Exception:
         try:
-            response = client.chat.completions.create(
-                model=FAST_MODEL,
-                messages=messages,
-                temperature=0.0,
-                max_tokens=512,
-            )
+            raw = nvidia_chat(messages, role="fast", temperature=0.0, max_tokens=512)
         except Exception:
             return {
                 "corrected_text": original_sentence,
@@ -99,7 +85,6 @@ def edit_sentence(
                 "changed": False,
             }
 
-    raw = response.choices[0].message.content.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
 

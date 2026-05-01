@@ -76,6 +76,7 @@ def test_run_pipeline_emits_events_and_applies_correction(monkeypatch) -> None:
             "reasoning": "Claim says 80.5, evidence says 86.7.",
             "evidence_quote": "BERT achieves 86.7 F1 on SQuAD 2.0 dev set.",
             "evidence_source": "https://arxiv.org/abs/1810.04805",
+            "model_used": "nvidia/llama-3.1-nemotron-70b-instruct",
         },
     )
     monkeypatch.setattr(pipeline, "deep_verify", lambda *args, **kwargs: None)
@@ -113,30 +114,29 @@ def test_run_pipeline_emits_events_and_applies_correction(monkeypatch) -> None:
     assert result["corrected"] == "BERT achieved 86.7% F1 on SQuAD 2.0."
     assert result["corrections"][0]["correction"] == "86.7%"
     assert any(event["type"] == "progress" for event in events)
-    assert any(event["type"] == "log" and "Groq verdict" in event["message"] for event in events)
+    assert any(event["type"] == "log" and "verdict" in event.get("message", "").lower() for event in events)
 
 
-def test_fastapi_verify_endpoint_uses_pipeline(monkeypatch) -> None:
-    monkeypatch.setenv("GROQ_API_KEY", "test-key")
-    monkeypatch.setenv("GEMINI_API_KEY", "")
-    monkeypatch.setattr(fastapi_app, "refresh_groq_clients", lambda api_key: None)
+def test_fastapi_analyze_endpoint(monkeypatch) -> None:
+    monkeypatch.setenv("NVIDIA_API_KEY", "test-key")
 
-    fake_pipeline_module = types.SimpleNamespace(
-        run_pipeline=lambda summary, verbose: {
-            "original": summary,
-            "corrected": summary,
-            "facts": [summary],
+    monkeypatch.setattr(
+        fastapi_app,
+        "run_pipeline",
+        lambda text, verbose=False, mode="fast": {
+            "original": text,
+            "corrected": text,
+            "facts": [text],
             "results": [],
             "corrections": [],
-        }
+            "internal_contradictions": {},
+        },
     )
-    monkeypatch.setitem(sys.modules, "pipeline", fake_pipeline_module)
 
+    # Need to reimport to pick up the monkeypatched run_pipeline
     client = TestClient(fastapi_app.app)
-    response = client.post("/api/v1/verify", json={"summary": "Paris is the capital of France.", "verbose": False})
+    response = client.post("/analyze", json={"text": "Paris is the capital of France.", "mode": "fast"})
 
     assert response.status_code == 200
     body = response.json()
-    assert body["success"] is True
-    assert body["result"]["original"] == "Paris is the capital of France."
-    assert "elapsed_ms" in body["meta"]
+    assert body["original"] == "Paris is the capital of France."

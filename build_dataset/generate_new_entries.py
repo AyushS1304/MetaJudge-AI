@@ -2,7 +2,7 @@
 build_dataset/generate_new_entries.py
 ======================================
 Fetches AI/ML papers from arXiv and auto-generates SkepticBench entries.
-Rate-limit safe — uses llama-3.1-8b-instant + exponential backoff.
+Rate-limit safe — uses NVIDIA NIM + exponential backoff.
 
 Run from project root:
     python build_dataset/generate_new_entries.py --count 75 --out data/skepticbench_new75.json
@@ -12,14 +12,12 @@ import os, sys, json, re, argparse, time
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import arxiv
-from groq import Groq, RateLimitError, APIStatusError
-from dotenv import load_dotenv
+from modules.nvidia_client import nvidia_chat
+from env_utils import load_env
 
-load_dotenv()
+load_env()
 
-client    = Groq(api_key=os.getenv("GROQ_API_KEY", ""))
-MODEL     = "llama-3.1-8b-instant"   # 131k tokens/min — safe for bulk
-MIN_DELAY = 3.0                        # seconds between every API call
+MIN_DELAY = 3.0
 MAX_RETRY = 5
 
 ARXIV_IDS = [
@@ -75,28 +73,23 @@ Rules:
 - The JSON must be valid. Use only double quotes. No trailing commas."""
 
 
-def call_groq_safe(messages: list, max_tokens: int = 1500) -> str:
-    """Call Groq with retry on rate limit."""
+def call_nvidia_safe(messages: list, max_tokens: int = 1500) -> str:
+    """Call NVIDIA NIM with retry on rate limit."""
     for attempt in range(1, MAX_RETRY + 1):
         try:
             time.sleep(MIN_DELAY)
-            resp = client.chat.completions.create(
-                model=MODEL,
-                messages=messages,
-                temperature=0.3,
-                max_tokens=max_tokens,
-            )
-            return resp.choices[0].message.content.strip()
-        except (RateLimitError, APIStatusError) as e:
-            wait = min(2 ** attempt * 10, 120)
-            print(f"    [rate limit] attempt {attempt}/{MAX_RETRY} — waiting {wait}s...")
-            time.sleep(wait)
-        except Exception as e:
-            if attempt == MAX_RETRY:
+            return nvidia_chat(messages, role="fast", temperature=0.3, max_tokens=max_tokens)
+        except RuntimeError as e:
+            if "429" in str(e) or "rate" in str(e).lower():
+                wait = min(2 ** attempt * 10, 120)
+                print(f"    [rate limit] attempt {attempt}/{MAX_RETRY} — waiting {wait}s...")
+                time.sleep(wait)
+            elif attempt == MAX_RETRY:
                 raise
-            print(f"    [error] {e} — retrying in 5s...")
-            time.sleep(5)
-    raise RuntimeError("Groq call failed after all retries")
+            else:
+                print(f"    [error] {e} — retrying in 5s...")
+                time.sleep(5)
+    raise RuntimeError("NVIDIA NIM call failed after all retries")
 
 
 def fetch_paper(arxiv_id: str) -> dict | None:
@@ -119,12 +112,6 @@ def fetch_paper(arxiv_id: str) -> dict | None:
 
 
 def normalise_label(val) -> str:
-    """
-    FIX for the silent-failure bug:
-    JSON true/false parses to Python True/False (booleans).
-    Also handle variations like "True", "False", 1, 0.
-    Always return the string "true" or "false".
-    """
     if isinstance(val, bool):
         return "true" if val else "false"
     s = str(val).strip().lower()
@@ -139,23 +126,19 @@ def generate_entry(paper: dict) -> dict | None:
         f"Abstract:\n{paper['abstract']}"
     )
     try:
-        raw = call_groq_safe(
+        raw = call_nvidia_safe(
             messages=[
                 {"role": "system", "content": PROMPT},
                 {"role": "user",   "content": user_msg},
             ],
             max_tokens=1500,
         )
-        # Strip any accidental markdown fences
         raw = re.sub(r"^```(?:json)?\s*", "", raw)
         raw = re.sub(r"\s*```\s*$",       "", raw)
         raw = raw.strip()
 
         parsed = json.loads(raw)
-
-        # Normalise labels to strings (fixes the boolean bug)
         parsed["labels"] = [normalise_label(l) for l in parsed.get("labels", [])]
-
         return parsed
 
     except json.JSONDecodeError as e:
@@ -163,7 +146,7 @@ def generate_entry(paper: dict) -> dict | None:
         print(f"    Raw response (first 300 chars): {raw[:300]}")
         return None
     except Exception as e:
-        print(f"    [Groq error] {e}")
+        print(f"    [NIM error] {e}")
         return None
 
 
@@ -182,7 +165,6 @@ def validate(g: dict) -> bool:
         print(f"    [skip] corrupted count {len(corrupted)} != fact count {len(facts)}")
         return False
 
-    # Count real differences (labels are now guaranteed strings)
     false_count = labels.count("false")
     real_diffs  = sum(
         1 for f, l, c in zip(facts, labels, corrupted)
@@ -237,7 +219,7 @@ def run(count: int, out_path: str, start_id: int = 26):
     output, failed = [], 0
 
     print(f"Generating {count} entries starting from ID sb{start_id:03d}")
-    print(f"Model: {MODEL}  |  Delay: {MIN_DELAY}s per call\n")
+    print(f"Model: NVIDIA NIM (fast)  |  Delay: {MIN_DELAY}s per call\n")
 
     for arxiv_id in ARXIV_IDS_UNIQUE:
         if len(output) >= count:
@@ -246,31 +228,26 @@ def run(count: int, out_path: str, start_id: int = 26):
         entry_id = start_id + len(output)
         print(f"[{len(output)+1:03d}/{count}] arXiv:{arxiv_id}")
 
-        # Step 1 — fetch from arXiv
         paper = fetch_paper(arxiv_id)
         if not paper:
             failed += 1
             continue
         print(f"  Title: {paper['title'][:65]}")
 
-        # Step 2 — generate with Groq
-        print(f"  Calling Groq...")
+        print(f"  Calling NVIDIA NIM...")
         generated = generate_entry(paper)
         if not generated:
             failed += 1
             continue
 
-        # Step 3 — validate
         if not validate(generated):
             failed += 1
             continue
 
-        # Step 4 — build entry
         entry = build_entry(paper, generated, entry_id)
         output.append(entry)
         print(f"  DONE — {len(entry['atomic_facts'])} facts, {len(entry['injected_errors'])} corruptions")
 
-    # Save
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2, ensure_ascii=False)
@@ -297,8 +274,8 @@ if __name__ == "__main__":
                    help="Starting ID number (26 if appending to 25 existing)")
     args = p.parse_args()
 
-    if not os.getenv("GROQ_API_KEY"):
-        print("ERROR: GROQ_API_KEY not set. Add it to your .env file.")
+    if not os.getenv("NVIDIA_API_KEY"):
+        print("ERROR: NVIDIA_API_KEY not set. Add it to your .env file.")
         sys.exit(1)
 
     run(args.count, args.out, args.start_id)

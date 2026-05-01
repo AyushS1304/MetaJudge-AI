@@ -1,27 +1,34 @@
 """
-config.py — Central config for Skeptical CoVe-RAG
-Set your GROQ_API_KEY in a .env file or as an environment variable.
+config.py — Central configuration for MetaJudge AI.
+
+All LLM calls use NVIDIA NIM exclusively.
+Set NVIDIA_API_KEY in a .env file or as an environment variable.
 """
 
 import os
+
 from env_utils import load_env
 
 load_env()
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+# ── NVIDIA NIM (sole LLM provider) ─────────────────────────────────────
+NVIDIA_API_KEY   = os.environ.get("NVIDIA_API_KEY", "[NVIDIA_API_KEY_HERE]")
+NVIDIA_BASE_URL  = "https://integrate.api.nvidia.com/v1"
 
-# Model tiers — swap as needed
-# Fast, cheap: llama-3.1-8b-instant
-# Strong:      llama-3.3-70b-versatile  or  mixtral-8x7b-32768
-FAST_MODEL   = "llama-3.1-8b-instant"
-STRONG_MODEL = "llama-3.3-70b-versatile"
+MODEL_FAST       = "meta/llama-3.1-8b-instruct"
+MODEL_JUDGE      = "nvidia/llama-3.1-nemotron-70b-instruct"
+MODEL_EDITOR     = "meta/llama-3.3-70b-instruct"
+MODEL_ESCALATION = "meta/llama-3.1-405b-instruct"
 
-# How many atomic facts to verify per run (set lower for testing)
-MAX_FACTS = 20
+# ── Retrieval limits (arXiv rate limit protection) ─────────────────────
+ARXIV_DELAY_SECONDS      = 2.5   # sleep between sequential arXiv calls
+MAX_ARXIV_CALLS_PER_RUN  = 6     # hard cap per pipeline run
+RESULTS_PER_QUERY        = 2     # results fetched per search query
+RETRIEVAL_TIMEOUT_SECONDS = 25
 
-# Retrieval
-MAX_ARXIV_RESULTS = 3
-MAX_WEB_RESULTS   = 3
-
-# CoVe
-MIN_EVIDENCE_CHARS = 30   # Evidence quote must be at least this long to count as grounded
+# ── Pipeline behaviour ─────────────────────────────────────────────────
+MAX_FACTS                  = 20
+MIN_EVIDENCE_CHARS         = 30
+ESCALATION_CONFIDENCE_GATE = 0.50   # only call 405B if confidence < this
+CACHE_TTL_DAYS             = 7
+CACHE_DB_PATH              = "data/evidence_cache.db"

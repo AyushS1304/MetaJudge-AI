@@ -12,25 +12,17 @@ Still missing vs Skeptical CoVe-RAG:
   ✗ Queries are still supportive, not adversarial
   ✗ No CoVe — judge is trusted blindly
   ✗ Destructive correction — rewrites full sentences, not surgical
-
-This baseline isolates the contribution of:
-  (a) Adversarial retrieval, and
-  (b) The CoVe meta-verification loop
 """
 
 import re
 import json
 import time
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from groq import Groq
+from modules.nvidia_client import nvidia_chat
 from modules.atomicizer  import atomicize
 from modules.retriever   import retrieve_evidence, format_evidence_block
 from modules.text_utils import find_best_matching_sentence
-from config import GROQ_API_KEY, FAST_MODEL, STRONG_MODEL, MAX_FACTS
-
-client = Groq(api_key=GROQ_API_KEY)
+from config import MAX_FACTS
 
 JUDGE_PROMPT = """You are a fact-checker. Given an atomic claim and evidence, judge:
 - SUPPORTED: evidence confirms the claim
@@ -49,15 +41,15 @@ def _supportive_query(fact: str) -> str:
     return fact
 
 def _judge_fact(fact: str, evidence_block: str) -> dict:
-    raw = client.chat.completions.create(
-        model=STRONG_MODEL,
-        messages=[
+    raw = nvidia_chat(
+        [
             {"role": "system", "content": JUDGE_PROMPT},
-            {"role": "user",   "content": f"CLAIM: {fact}\n\nEVIDENCE:\n{evidence_block}\n\nReturn JSON."}
+            {"role": "user",   "content": f"CLAIM: {fact}\n\nEVIDENCE:\n{evidence_block}\n\nReturn JSON."},
         ],
+        role="judge",
         temperature=0.0,
         max_tokens=256,
-    ).choices[0].message.content.strip()
+    )
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$",          "", raw)
     try:
@@ -67,16 +59,16 @@ def _judge_fact(fact: str, evidence_block: str) -> dict:
 
 def _rewrite_sentence(original: str, evidence_block: str) -> str:
     """Vanilla RARR: rewrite entire sentence (destructive)."""
-    response = client.chat.completions.create(
-        model=STRONG_MODEL,
-        messages=[
+    raw = nvidia_chat(
+        [
             {"role": "system", "content": REWRITE_PROMPT},
-            {"role": "user",   "content": f"ORIGINAL: {original}\n\nEVIDENCE:\n{evidence_block[:1000]}\n\nRewritten sentence:"}
+            {"role": "user",   "content": f"ORIGINAL: {original}\n\nEVIDENCE:\n{evidence_block[:1000]}\n\nRewritten sentence:"},
         ],
+        role="editor",
         temperature=0.0,
         max_tokens=256,
     )
-    return response.choices[0].message.content.strip()
+    return raw.strip()
 
 def run_vanilla_rarr(
     summary: str,
@@ -111,7 +103,6 @@ def run_vanilla_rarr(
         }
 
         if result["verdict"] == "CONTRADICTED":
-            # Vanilla RARR: rewrite full sentence (destructive)
             source = find_best_matching_sentence(summary, fact)
             rewritten = _rewrite_sentence(source, ev_block)
             result["original_sentence"] = source
@@ -128,7 +119,6 @@ def run_vanilla_rarr(
         if sleep_seconds > 0:
             time.sleep(sleep_seconds)
 
-    # Apply rewrites (full-sentence replacement)
     corrected = summary
     for r in rewrites:
         corrected = corrected.replace(

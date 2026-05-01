@@ -37,12 +37,6 @@ def _prediction_is_positive(item: Any) -> bool:
     return True
 
 
-def _ground_truth_is_positive(item: Any) -> bool:
-    if _get_value(item, "ground_truth") is not None:
-        return _get_value(item, "ground_truth") == "hallucinated"
-    if _get_value(item, "is_corrupted") is not None:
-        return bool(_get_value(item, "is_corrupted"))
-    raise KeyError("Ground-truth item is missing `ground_truth` or `is_corrupted`.")
 
 
 def _ground_truth_correction(item: Any) -> str:
@@ -53,47 +47,21 @@ def _prediction_correction(item: Any) -> str:
     return str(_get_value(item, "correction", "") or "")
 
 
-def compute_metrics(predictions, ground_truth) -> dict[str, float]:
-    """
-    Compute precision, recall, F1, correction accuracy, and false-positive rate.
-    """
-    if len(predictions) != len(ground_truth):
-        raise ValueError("`predictions` and `ground_truth` must have the same length.")
-
-    true_positive = false_positive = true_negative = false_negative = 0
-    correction_matches = 0
-    correction_total = 0
-
-    for predicted, truth in zip(predictions, ground_truth):
-        predicted_positive = _prediction_is_positive(predicted)
-        actual_positive = _ground_truth_is_positive(truth)
-
-        if predicted_positive and actual_positive:
-            true_positive += 1
-            expected_correction = _ground_truth_correction(truth)
-            if expected_correction:
-                correction_total += 1
-                if _normalise_text(_prediction_correction(predicted)) == _normalise_text(expected_correction):
-                    correction_matches += 1
-        elif predicted_positive and not actual_positive:
-            false_positive += 1
-        elif not predicted_positive and actual_positive:
-            false_negative += 1
-        else:
-            true_negative += 1
-
-    precision = true_positive / (true_positive + false_positive) if (true_positive + false_positive) else 0.0
-    recall = true_positive / (true_positive + false_negative) if (true_positive + false_negative) else 0.0
-    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
-    correction_acc = correction_matches / correction_total if correction_total else 0.0
-    false_positive_rate = false_positive / (false_positive + true_negative) if (false_positive + true_negative) else 0.0
-
+def compute_metrics(predictions: list[bool], ground_truth: list[bool]) -> dict:
+    TP = sum(p and g for p, g in zip(predictions, ground_truth))
+    FP = sum(p and not g for p, g in zip(predictions, ground_truth))
+    FN = sum(not p and g for p, g in zip(predictions, ground_truth))
+    TN = sum(not p and not g for p, g in zip(predictions, ground_truth))
+    precision = TP / (TP + FP) if (TP + FP) > 0 else 0.0
+    recall    = TP / (TP + FN) if (TP + FN) > 0 else 0.0
+    f1 = 2*precision*recall / (precision+recall) if (precision+recall) > 0 else 0.0
+    fpr = FP / (FP + TN) if (FP + TN) > 0 else 0.0
     return {
-        "precision": precision,
-        "recall": recall,
-        "f1": f1,
-        "correction_acc": correction_acc,
-        "false_positive_rate": false_positive_rate,
+        "precision": round(precision, 3),
+        "recall":    round(recall, 3),
+        "f1":        round(f1, 3),
+        "false_positive_rate": round(fpr, 3),
+        "TP": TP, "FP": FP, "FN": FN, "TN": TN
     }
 
 
@@ -146,19 +114,34 @@ class BenchmarkReport:
             self.cove_overturned_contradictions += 1
 
     def precision(self) -> float:
-        return compute_metrics(self.results, self.results)["precision"]
+        preds = [_prediction_is_positive(r) for r in self.results]
+        truths = [r.ground_truth == "hallucinated" for r in self.results]
+        return compute_metrics(preds, truths)["precision"]
 
     def recall(self) -> float:
-        return compute_metrics(self.results, self.results)["recall"]
+        preds = [_prediction_is_positive(r) for r in self.results]
+        truths = [r.ground_truth == "hallucinated" for r in self.results]
+        return compute_metrics(preds, truths)["recall"]
 
     def f1(self) -> float:
-        return compute_metrics(self.results, self.results)["f1"]
+        preds = [_prediction_is_positive(r) for r in self.results]
+        truths = [r.ground_truth == "hallucinated" for r in self.results]
+        return compute_metrics(preds, truths)["f1"]
 
     def correction_accuracy(self) -> float:
-        return compute_metrics(self.results, self.results)["correction_acc"]
+        total = matches = 0
+        for r in self.results:
+            if _prediction_is_positive(r) and r.ground_truth == "hallucinated":
+                if r.ground_truth_correction:
+                    total += 1
+                    if _normalise_text(r.correction) == _normalise_text(r.ground_truth_correction):
+                        matches += 1
+        return matches / total if total else 0.0
 
     def false_positive_rate(self) -> float:
-        return compute_metrics(self.results, self.results)["false_positive_rate"]
+        preds = [_prediction_is_positive(r) for r in self.results]
+        truths = [r.ground_truth == "hallucinated" for r in self.results]
+        return compute_metrics(preds, truths)["false_positive_rate"]
 
     def skeptic_score(self) -> float:
         return self.cove_confirmed_contradictions / self.total_claims if self.total_claims else 0.0

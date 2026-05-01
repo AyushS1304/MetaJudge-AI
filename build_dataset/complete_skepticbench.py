@@ -115,6 +115,6 @@ if __name__ == "__main__":
     p.add_argument("--csv", default="data/skeptic_dataset.csv")
     p.add_argument("--out", default="data/skepticbench_25.json")
     args = p.parse_args()
-    if not os.getenv("GROQ_API_KEY"):
-        print("⚠  Set GROQ_API_KEY in .env"); sys.exit(1)
+    if not os.getenv("NVIDIA_API_KEY"):
+        print("⚠  Set NVIDIA_API_KEY in .env"); sys.exit(1)
     run(args.csv, args.out)
