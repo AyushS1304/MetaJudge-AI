@@ -427,6 +427,7 @@ def run_pipeline(
             }
         )
         final_result = attach_detection_confidence(final_result)
+        final_result["is_hallucination"] = final_result.get("verdict") == "CONTRADICTED" or final_result.get("cove_meta_verdict") == "CONFIRMED_CONTRADICTION"
         all_results.append(final_result)
 
         if _should_apply_editor(final_result, use_cove=use_cove):

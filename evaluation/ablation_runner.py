@@ -1,5 +1,7 @@
 import sys, os, json
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from env_utils import load_env
+load_env()
 
 BENCHMARK_FILE = "data/skepticbench_sample.json"
 RESULTS_FILE   = "results/ablation.json"
@@ -28,19 +30,25 @@ def run_config(name: str, pipeline_kwargs: dict) -> dict:
                 mode="full",
                 **pipeline_kwargs
             )
-            for cr in result.get("results", []):
-                predictions.append(cr.get("verdict") in {"CONTRADICTED", "INTERNAL_CONTRADICTION"})
-            for lbl in sample.get("labels", []):
-                ground_truth.append(lbl == "false")
+            any_detected = any(
+                cr.get("verdict") in {"CONTRADICTED", "INTERNAL_CONTRADICTION"}
+                for cr in result.get("results", [])
+            )
+            predictions.append(any_detected)
+
+            any_corrupted = any(
+                lbl in {"false", "corrupted"}
+                for lbl in sample.get("labels", [])
+            )
+            ground_truth.append(any_corrupted)
         except Exception as e:
             print(f"  ERROR on sample '{sample.get('paper','?')[:40]}': {e}")
 
-    min_len = min(len(predictions), len(ground_truth))
-    if min_len == 0:
+    if len(predictions) == 0:
         metrics = {"precision": 0.0, "recall": 0.0, "f1": 0.0,
-                   "false_positive_rate": 0.0}
+                   "false_positive_rate": 0.0, "sample_count": 0}
     else:
-        metrics = compute_metrics(predictions[:min_len], ground_truth[:min_len])
+        metrics = compute_metrics(predictions, ground_truth)
 
     print(f"  -> F1={metrics['f1']:.3f}  "
           f"P={metrics['precision']:.3f}  "

@@ -287,7 +287,7 @@ def _search_web(query: str) -> list[dict]:
 
     results = []
     try:
-        with DDGS() as ddgs:
+        with DDGS(timeout=15) as ddgs:
             hits = list(ddgs.text(query, max_results=3))
         for hit in hits:
             results.append({

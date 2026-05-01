@@ -21,8 +21,8 @@ MODEL_EDITOR     = "meta/llama-3.3-70b-instruct"
 MODEL_ESCALATION = "meta/llama-3.1-405b-instruct"
 
 # ── Retrieval limits (arXiv rate limit protection) ─────────────────────
-ARXIV_DELAY_SECONDS      = 2.5   # sleep between sequential arXiv calls
-MAX_ARXIV_CALLS_PER_RUN  = 6     # hard cap per pipeline run
+ARXIV_DELAY_SECONDS      = 4.0   # sleep between sequential arXiv calls
+MAX_ARXIV_CALLS_PER_RUN  = 4     # hard cap per pipeline run
 RESULTS_PER_QUERY        = 2     # results fetched per search query
 RETRIEVAL_TIMEOUT_SECONDS = 25
 

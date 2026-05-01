@@ -61,7 +61,8 @@ def compute_metrics(predictions: list[bool], ground_truth: list[bool]) -> dict:
         "recall":    round(recall, 3),
         "f1":        round(f1, 3),
         "false_positive_rate": round(fpr, 3),
-        "TP": TP, "FP": FP, "FN": FN, "TN": TN
+        "TP": TP, "FP": FP, "FN": FN, "TN": TN,
+        "sample_count": len(predictions)
     }
 
 

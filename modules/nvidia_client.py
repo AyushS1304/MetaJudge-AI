@@ -16,8 +16,11 @@ import logging
 import os
 import re
 import time
-
 from openai import OpenAI
+from env_utils import load_env
+
+# Ensure .env is loaded before we read the key
+load_env()
 
 NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "[NVIDIA_API_KEY_HERE]")
 BASE_URL = "https://integrate.api.nvidia.com/v1"
@@ -73,6 +76,7 @@ def nvidia_chat(
                 messages=messages,
                 temperature=temperature,
                 max_tokens=max_tokens,
+                timeout=30.0,
             )
             return response.choices[0].message.content.strip()
         except Exception as e:
