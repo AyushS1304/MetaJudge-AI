@@ -1,30 +1,44 @@
-#!/bin/bash
-set -e
+#!/usr/bin/env bash
+set -euo pipefail
 
-mkdir -p results logs data
+cd "$(dirname "$0")"
 
-# Load environment variables
-if [ -f .env ]; then
-    export $(grep -v '^#' .env | xargs)
+PYTHON_BIN="python3"
+PIP_FLAGS=()
+
+if [ -f ".venv/bin/activate" ] && .venv/bin/python -m pip --version >/dev/null 2>&1; then
+  # shellcheck disable=SC1091
+  source ".venv/bin/activate"
+  PYTHON_BIN="python"
+elif python3 -m venv .venv 2>/tmp/metajudge_venv_error.log && .venv/bin/python -m pip --version >/dev/null 2>&1; then
+  # shellcheck disable=SC1091
+  source ".venv/bin/activate"
+  PYTHON_BIN="python"
+else
+  echo "Python venv creation is unavailable; using the current Python environment."
+  echo "Install python3-venv/ensurepip later if you want an isolated environment."
+  if "$PYTHON_BIN" -m pip --version >/dev/null 2>&1; then
+    PIP_FLAGS=(--user --break-system-packages)
+  else
+    echo "pip is not available for python3. Install dependencies manually from requirements.txt."
+  fi
 fi
 
-if [ -z "$NVIDIA_API_KEY" ]; then
-    echo "ERROR: NVIDIA_API_KEY not set. Copy .env.example to .env and add your key."
-    exit 1
+if "$PYTHON_BIN" -m pip --version >/dev/null 2>&1; then
+  "$PYTHON_BIN" -m pip install "${PIP_FLAGS[@]}" -r requirements.txt
 fi
 
-echo "Starting MetaJudge AI backend..."
-uvicorn fastapi_app:app --reload --port 8000 --log-level warning &
-BACKEND_PID=$!
-sleep 3
+if [ -z "${GROQ_API_KEY:-}" ] && [ -f ".env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  source ".env"
+  set +a
+fi
 
-echo ""
-echo "Health check:"
-curl -s http://localhost:8000/health | python3 -m json.tool
-echo ""
-echo "Open demo/index.html in your browser"
-echo "API docs: http://localhost:8000/docs"
-echo "Press Ctrl+C to stop"
+if [ -z "${GROQ_API_KEY:-}" ]; then
+  echo "GROQ_API_KEY is not set in the shell."
+  echo "You can still enter it in the Streamlit sidebar."
+fi
 
-trap "kill $BACKEND_PID 2>/dev/null" EXIT
-wait
+echo "Starting MetaJudge AI Streamlit demo..."
+"$PYTHON_BIN" -m streamlit run streamlit_app.py

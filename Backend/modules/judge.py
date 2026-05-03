@@ -4,13 +4,21 @@ modules/judge.py — Step 4: LLM Judge
 Compares an atomic fact against the retrieved evidence and returns
 a verdict: SUPPORTED, CONTRADICTED, or INSUFFICIENT_EVIDENCE.
 
-Uses the NVIDIA NIM Nemotron-70B model for reasoning accuracy.
+Uses the stronger Groq model for better reasoning accuracy.
 """
 
 import re
 import json
+from groq import Groq
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import GROQ_API_KEY, FAST_MODEL, STRONG_MODEL
 
-from modules.nvidia_client import nvidia_chat, MODELS
+client = Groq(api_key=GROQ_API_KEY)
+
+# Use fast model for judge to save daily token budget
+# Switch to STRONG_MODEL only if accuracy needs improvement
+JUDGE_MODEL = STRONG_MODEL
 
 VERDICT_SUPPORTED    = "SUPPORTED"
 VERDICT_CONTRADICTED = "CONTRADICTED"
@@ -67,7 +75,7 @@ def judge_claim(fact: str, evidence_block: str) -> dict:
         evidence_block: Formatted string of all retrieved evidence.
 
     Returns:
-        A dict with keys: verdict, reasoning, evidence_quote, evidence_source, model_used
+        A dict with keys: verdict, reasoning, evidence_quote, evidence_source
     """
     user_msg = (
         f"CLAIM TO VERIFY:\n{fact}\n\n"
@@ -75,25 +83,17 @@ def judge_claim(fact: str, evidence_block: str) -> dict:
         "Return your judgment as JSON."
     )
 
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_msg},
-    ]
+    response = client.chat.completions.create(
+        model=JUDGE_MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": user_msg},
+        ],
+        temperature=0.0,
+        max_tokens=512,
+    )
 
-    try:
-        raw = nvidia_chat(messages, role="judge", temperature=0.0, max_tokens=512)
-    except Exception:
-        try:
-            raw = nvidia_chat(messages, role="fast", temperature=0.0, max_tokens=512)
-        except Exception:
-            return {
-                "verdict": VERDICT_INSUFFICIENT,
-                "reasoning": "Judge request failed.",
-                "evidence_quote": "",
-                "evidence_source": "",
-                "model_used": MODELS["judge"],
-            }
-
+    raw = response.choices[0].message.content.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
 
@@ -103,7 +103,6 @@ def judge_claim(fact: str, evidence_block: str) -> dict:
         result["verdict"] = result.get("verdict", VERDICT_INSUFFICIENT).upper()
         if result["verdict"] not in (VERDICT_SUPPORTED, VERDICT_CONTRADICTED, VERDICT_INSUFFICIENT):
             result["verdict"] = VERDICT_INSUFFICIENT
-        result["model_used"] = MODELS["judge"]
         return result
     except Exception:
         return {
@@ -111,13 +110,12 @@ def judge_claim(fact: str, evidence_block: str) -> dict:
             "reasoning": "Failed to parse judge response.",
             "evidence_quote": "",
             "evidence_source": "",
-            "model_used": MODELS["judge"],
         }
 
 
 if __name__ == "__main__":
-    from modules.retriever import retrieve_evidence, format_evidence_block
-    from modules.query_generator import generate_skeptical_queries
+    from retriever import retrieve_evidence, format_evidence_block
+    from query_generator import generate_skeptical_queries
 
     fact = "BERT achieved 80.5% on the SQuAD 2.0 benchmark."
     print(f"=== JUDGE TEST ===\nFact: {fact}\n")
@@ -129,7 +127,6 @@ if __name__ == "__main__":
     result = judge_claim(fact, ev_block)
     print(f"Verdict:  {result['verdict']}")
     print(f"Reason:   {result['reasoning']}")
-    print(f"Model:    {result['model_used']}")
     if result.get("evidence_quote"):
         print(f"Quote:    {result['evidence_quote']}")
         print(f"Source:   {result['evidence_source']}")
