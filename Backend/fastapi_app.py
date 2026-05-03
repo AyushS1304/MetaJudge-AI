@@ -1,5 +1,5 @@
 """
-FastAPI backend for MetaJudge AI v2.0
+FastAPI backend for MetaJudge AI.
 
 Run:
     uvicorn fastapi_app:app --reload --host 0.0.0.0 --port 8000
@@ -7,221 +7,133 @@ Run:
 
 from __future__ import annotations
 
-import asyncio
-import json
 import os
 import time
-import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi import FastAPI, HTTPException
+from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from env_utils import load_env
-from modules.nvidia_client import health_check, MODELS
-from modules.cache_layer import get_stats, clear_cache
+
 
 load_env()
 
+
+def _parse_cors_origins() -> list[str]:
+    raw = os.getenv(
+        "CORS_ORIGINS",
+        "http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173",
+    )
+    origins = [o.strip() for o in raw.split(",") if o.strip()]
+    return origins or ["http://localhost:3000", "http://localhost:5173"]
+
+
+def _refresh_groq_clients(groq_api_key: str) -> None:
+    """
+    Refresh module-level Groq clients.
+    These modules initialize clients at import time, so we rebind them when key changes.
+    """
+    if not groq_api_key:
+        return
+
+    try:
+        from groq import Groq
+
+        client = Groq(api_key=groq_api_key)
+
+        import modules.atomicizer as atomicizer
+        import modules.query_generator as query_generator
+        import modules.judge as judge
+        import modules.cove_loop as cove_loop
+        import modules.editor as editor
+
+        atomicizer.client = client
+        query_generator.client = client
+        judge.client = client
+        cove_loop.client = client
+        editor.client = client
+    except Exception:
+        # If refresh fails, pipeline execution will still raise clear provider errors.
+        pass
+
+
+class VerifyRequest(BaseModel):
+    summary: str = Field(..., min_length=1, description="Summary text to fact-check")
+    verbose: bool = Field(False, description="Include verbose pipeline prints on server logs")
+
+
+class VerifyResponse(BaseModel):
+    success: bool
+    result: dict[str, Any]
+    meta: dict[str, Any]
+
+
 app = FastAPI(
-    title="MetaJudge AI",
-    version="2.0",
-    description="Adversarial Hallucination Detection & Correction API — powered by NVIDIA NIM",
+    title="MetaJudge AI API",
+    version="1.0.0",
+    description="Backend API for MetaJudge AI Skeptical CoVe-RAG",
 )
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_parse_cors_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-_jobs: dict[str, dict[str, Any]] = {}
 
+@app.get("/")
+def root() -> dict[str, str]:
+    return {"message": "MetaJudge AI API is running"}
 
-# ── Startup ────────────────────────────────────────────────────────────────
-
-@app.on_event("startup")
-async def startup():
-    from modules.cache_layer import _get_conn
-    _get_conn()  # initialise DB and table
-    key_set = bool(os.environ.get("NVIDIA_API_KEY"))
-    print(f"NVIDIA_API_KEY: {'set ✓' if key_set else 'MISSING ✗'}")
-
-
-# ── Health ─────────────────────────────────────────────────────────────────
 
 @app.get("/health")
-async def health():
-    loop = asyncio.get_event_loop()
-    checks = await loop.run_in_executor(None, health_check)
+def health() -> dict[str, Any]:
     return {
         "status": "ok",
-        "models": checks,
-        "nvidia_key_set": bool(os.environ.get("NVIDIA_API_KEY")),
+        "groq_key_configured": bool(os.getenv("GROQ_API_KEY")),
+        "gemini_key_configured": bool(os.getenv("GEMINI_API_KEY")),
         "timestamp_utc": datetime.now(timezone.utc).isoformat(),
     }
 
 
-# ── Analyze (sync) ────────────────────────────────────────────────────────
+@app.post("/api/v1/verify", response_model=VerifyResponse)
+async def verify_summary(payload: VerifyRequest) -> VerifyResponse:
+    summary = payload.summary.strip()
+    if not summary:
+        raise HTTPException(status_code=400, detail="`summary` cannot be empty.")
 
-class AnalyzeRequest(BaseModel):
-    text: str = Field(..., min_length=1, description="Summary text to fact-check")
-    mode: str = Field("fast", description="'fast' or 'full'")
+    if not os.getenv("GROQ_API_KEY"):
+        raise HTTPException(
+            status_code=400,
+            detail="GROQ_API_KEY is missing. Add it in .env before starting the API.",
+        )
 
+    # Ensure module-level Groq clients use the .env key.
+    _refresh_groq_clients(os.environ["GROQ_API_KEY"])
 
-@app.post("/analyze")
-async def analyze(req: AnalyzeRequest):
-    if not os.getenv("NVIDIA_API_KEY"):
-        raise HTTPException(status_code=400, detail="NVIDIA_API_KEY is missing.")
-    t0 = time.time()
-    loop = asyncio.get_event_loop()
-    from pipeline import run_pipeline
-    result = await loop.run_in_executor(
-        None, lambda: run_pipeline(req.text, verbose=False, mode=req.mode)
-    )
-    result["processing_time_ms"] = round((time.time() - t0) * 1000)
-    return result
-
-
-# ── Analyze (SSE stream) ──────────────────────────────────────────────────
-
-@app.get("/analyze/stream")
-async def analyze_stream(text: str, mode: str = "fast"):
-    if not os.getenv("NVIDIA_API_KEY"):
-        raise HTTPException(status_code=400, detail="NVIDIA_API_KEY is missing.")
-
-    async def event_generator():
-        loop = asyncio.get_event_loop()
-        queue: asyncio.Queue = asyncio.Queue()
-
-        def stage_callback(stage_name: str, result: Any, duration_ms: float):
-            # Sanitize result for JSON serialization
-            safe_result = {}
-            if isinstance(result, dict):
-                for k, v in result.items():
-                    try:
-                        json.dumps(v)
-                        safe_result[k] = v
-                    except (TypeError, ValueError):
-                        safe_result[k] = str(v)
-            else:
-                safe_result = {"value": str(result)}
-
-            loop.call_soon_threadsafe(
-                queue.put_nowait,
-                {"stage": stage_name, "status": "complete",
-                 "result": safe_result, "duration_ms": round(duration_ms, 1)}
-            )
-
-        def run():
-            from pipeline import run_pipeline
-            r = run_pipeline(text, verbose=False, mode=mode, stage_callback=stage_callback)
-            loop.call_soon_threadsafe(queue.put_nowait, {"stage": "done", "final_output": r})
-
-        loop.run_in_executor(None, run)
-
-        while True:
-            event = await queue.get()
-            yield f"data: {json.dumps(event, default=str)}\n\n"
-            if event.get("stage") == "done":
-                break
-
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
-
-
-# ── Benchmark ──────────────────────────────────────────────────────────────
-
-class BenchmarkRequest(BaseModel):
-    sample_count: int = Field(5, ge=1, le=25)
-    mode: str = Field("fast", description="'fast' or 'full'")
-
-
-@app.post("/benchmark/run")
-async def benchmark_run(req: BenchmarkRequest, background_tasks: BackgroundTasks):
-    job_id = str(uuid.uuid4())[:8]
-    _jobs[job_id] = {"status": "running", "result": None}
-    background_tasks.add_task(_run_benchmark_job, job_id, req.sample_count, req.mode)
-    return {"job_id": job_id, "status": "running"}
-
-
-def _run_benchmark_job(job_id: str, sample_count: int, mode: str):
+    started = time.perf_counter()
     try:
-        with open("data/skepticbench_sample.json") as f:
-            samples = json.load(f)[:sample_count]
-
+        # Import lazily so app can still boot and expose clear health/errors.
         from pipeline import run_pipeline
-        from evaluation.skeptic_score import ClaimResult, BenchmarkReport
 
-        report = BenchmarkReport()
-        for item in samples:
-            output = run_pipeline(
-                item["summary"],
-                verbose=False,
-                mode=mode,
-                facts_override=item.get("corrupted_facts") or item.get("atomic_facts"),
-            )
-            injected_by_fact = {e["fact"]: e for e in item.get("injected_errors", [])}
-            for result in output["results"]:
-                injected = injected_by_fact.get(result["fact"])
-                report.add(ClaimResult(
-                    fact=result["fact"],
-                    ground_truth="hallucinated" if injected else "correct",
-                    verdict=result["verdict"],
-                    cove_applied=result.get("cove_applied", False),
-                    cove_meta_verdict=result.get("cove_meta_verdict"),
-                    correction=next(
-                        (c["correction"] for c in output["corrections"] if c["fact"] == result["fact"]),
-                        "",
-                    ),
-                    source_url=result.get("evidence_source", ""),
-                    ground_truth_correction=(injected or {}).get("ground_truth_correction", ""),
-                    detection_confidence=float(result.get("detection_confidence", 0.65)),
-                ))
-
-        _jobs[job_id] = {
-            "status": "complete",
-            "result": {
-                "precision": report.precision(),
-                "recall": report.recall(),
-                "f1": report.f1(),
-                "false_positive_rate": report.false_positive_rate(),
-                "skeptic_score": report.skeptic_score(),
-                "total_claims": report.total_claims,
-                "tp": report.true_positive,
-                "fp": report.false_positive,
-                "tn": report.true_negative,
-                "fn": report.false_negative,
-            },
-        }
+        result = await run_in_threadpool(run_pipeline, summary, payload.verbose)
     except Exception as exc:
-        _jobs[job_id] = {"status": "error", "result": {"error": str(exc)}}
+        raise HTTPException(status_code=500, detail=f"Pipeline execution failed: {exc}") from exc
 
-
-@app.get("/benchmark/status/{job_id}")
-async def benchmark_status(job_id: str):
-    return _jobs.get(job_id, {"status": "not_found"})
-
-
-# ── Cache endpoints ────────────────────────────────────────────────────────
-
-@app.get("/cache/stats")
-async def cache_stats():
-    return get_stats()
-
-
-@app.delete("/cache")
-async def cache_clear():
-    clear_cache()
-    return {"status": "cleared"}
-
-
-# ── Root ───────────────────────────────────────────────────────────────────
-
-@app.get("/")
-def root():
-    return {"message": "MetaJudge AI API v2.0 is running", "models": MODELS}
+    elapsed_ms = int((time.perf_counter() - started) * 1000)
+    return VerifyResponse(
+        success=True,
+        result=result,
+        meta={
+            "elapsed_ms": elapsed_ms,
+            "groq_key_configured": bool(os.getenv("GROQ_API_KEY")),
+            "gemini_key_configured": bool(os.getenv("GEMINI_API_KEY")),
+            "timestamp_utc": datetime.now(timezone.utc).isoformat(),
+        },
+    )

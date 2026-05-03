@@ -1,7 +1,7 @@
 [project]
-name = "metajudge-ai"
+name = "metajudge-demo-backend"
 version = "0.1.0"
-description = "Hallucination detection and correction for AI/ML paper summaries"
+description = "Groq/Gemini demo backend for MetaJudge AI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
@@ -12,16 +12,10 @@ dependencies = [
     "google-genai>=1.73.1",
     "groq>=1.2.0",
     "langchain-community>=0.4.1",
-    "matplotlib>=3.10.1",
     "pandas>=3.0.2",
     "pymupdf>=1.27.2.3",
     "python-dotenv>=1.2.2",
     "requests>=2.33.1",
     "streamlit>=1.56.0",
     "uvicorn[standard]>=0.38.0",
-]
-
-[project.optional-dependencies]
-dev = [
-    "pytest>=8.3.4",
 ]

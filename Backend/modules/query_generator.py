@@ -9,10 +9,13 @@ This is the core philosophical shift from standard RAG:
 This breaks confirmation bias by inverting the retrieval objective.
 """
 
-import json
 import re
+from groq import Groq
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import GROQ_API_KEY, FAST_MODEL
 
-from modules.nvidia_client import nvidia_chat
+client = Groq(api_key=GROQ_API_KEY)
 
 SYSTEM_PROMPT = """You are a skeptical fact-checker. Your job is to generate search queries
 that will DISPROVE or find CONTRADICTIONS to a given claim.
@@ -42,16 +45,22 @@ def generate_skeptical_queries(fact: str) -> list[str]:
     Returns:
         A list of 2 skeptical search query strings.
     """
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user",   "content": f"Generate skeptical queries to DISPROVE this claim:\n\n{fact}"},
-    ]
+    response = client.chat.completions.create(
+        model=FAST_MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": f"Generate skeptical queries to DISPROVE this claim:\n\n{fact}"}
+        ],
+        temperature=0.2,
+        max_tokens=256,
+    )
 
-    raw = nvidia_chat(messages, role="fast", temperature=0.2, max_tokens=256)
+    raw = response.choices[0].message.content.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
 
     try:
+        import json
         queries = json.loads(raw)
         if isinstance(queries, list):
             return [str(q).strip() for q in queries if str(q).strip()][:3]

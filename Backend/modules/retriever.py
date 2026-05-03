@@ -1,40 +1,38 @@
 """
 modules/retriever.py — Step 3: Hybrid Retrieval
 -------------------------------------------------
-Three-source retrieval strategy with caching and rate limiting:
+Three-source retrieval strategy:
 
-  Source 1 — arXiv DIRECT (most important)
+  Source 1 — arXiv DIRECT (new, most important)
     Extracts the paper/model name from the atomic fact,
-    searches arXiv by title, fetches the FULL abstract.
+    searches arXiv by title, fetches the FULL abstract of the
+    top result. This is the authoritative ground truth — the
+    original paper with exact numbers, authors, and dates.
 
   Source 2 — arXiv ADVERSARIAL
     Searches arXiv with the adversarial query string.
+    Catches related papers that might contradict the claim.
 
   Source 3 — DuckDuckGo WEB
-    General web search for blog posts, leaderboards, etc.
+    General web search for blog posts, leaderboards, press
+    releases — good for dates and announcements.
 
-All results are cached in SQLite to avoid hitting arXiv rate limits.
-A per-run cap of MAX_ARXIV_CALLS_PER_RUN prevents 429 errors.
+Why Source 1 solves the BERT problem:
+  Adversarial query "BERT actual SQuAD 2.0 score vs claimed 80.5%"
+  returns generic pages. But searching arXiv for "BERT Devlin
+  bidirectional transformers" returns arXiv:1810.04805 whose
+  abstract contains "86.7 F1 on SQuAD 2.0" — the exact number
+  that proves the hallucination.
 """
 
-import logging
 import re
-import threading
-import time
-
-import requests as _requests
-
-from config import (
-    ARXIV_DELAY_SECONDS,
-    MAX_ARXIV_CALLS_PER_RUN,
-    RESULTS_PER_QUERY,
-    RETRIEVAL_TIMEOUT_SECONDS,
-)
-from modules.cache_layer import get_cached, set_cached
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import MAX_ARXIV_RESULTS, MAX_WEB_RESULTS
 
 import arxiv
 
-# Optional PDF extraction
+# Optional PDF extraction — used when abstract doesn't have the specific value
 try:
     from modules.pdf_extractor import get_paper_results as _get_pdf_results
     PDF_EXTRACTION_AVAILABLE = True
@@ -46,23 +44,16 @@ try:
 except ImportError:
     from duckduckgo_search import DDGS
 
-# Thread-safe arXiv call counter
-_arxiv_counter = threading.local()
+# PDF fetcher for full paper content (results tables, experiments)
+try:
+    from modules.pdf_fetcher import fetch_paper_full_content
+    PDF_FETCH_AVAILABLE = True
+except ImportError:
+    PDF_FETCH_AVAILABLE = False
 
-
-def _get_arxiv_count() -> int:
-    return getattr(_arxiv_counter, "count", 0)
-
-
-def _increment_arxiv_count():
-    _arxiv_counter.count = _get_arxiv_count() + 1
-
-
-def reset_arxiv_counter():
-    """Call this before each ablation config to reset the per-thread cap."""
-    _arxiv_counter.count = 0
 
 # ── Known paper aliases for direct arXiv lookup ───────────────────────────────
+# Maps common names → arXiv IDs for instant exact retrieval
 KNOWN_PAPERS = {
     "bert":               "1810.04805",
     "gpt-4":              "2303.08774",
@@ -102,26 +93,8 @@ KNOWN_PAPERS = {
 }
 
 
-def _can_call_arxiv() -> bool:
-    """Check if we're still under the per-run arXiv cap."""
-    return _get_arxiv_count() < MAX_ARXIV_CALLS_PER_RUN
-
-
 def _fetch_by_arxiv_id(arxiv_id: str) -> dict | None:
     """Fetch a paper directly by its arXiv ID — guaranteed exact match."""
-    # Check cache first
-    cached = get_cached(f"id:{arxiv_id}", "arxiv_direct")
-    if cached is not None:
-        logging.info("CACHE HIT [arxiv_direct] id:%s", arxiv_id)
-        return cached[0] if cached else None
-
-    if not _can_call_arxiv():
-        logging.warning("arXiv cap reached (%d), skipping fetch for %s", MAX_ARXIV_CALLS_PER_RUN, arxiv_id)
-        return None
-
-    time.sleep(ARXIV_DELAY_SECONDS)
-    _increment_arxiv_count()
-
     try:
         results = list(arxiv.Search(
             id_list=[arxiv_id], max_results=1
@@ -129,6 +102,7 @@ def _fetch_by_arxiv_id(arxiv_id: str) -> dict | None:
         if not results:
             return None
         p = results[0]
+        # Use FULL abstract (no truncation) — this is where the exact numbers are
         pub_date = p.published.strftime('%Y-%m-%d')
         pub_year = p.published.year
         snippet = (
@@ -139,14 +113,12 @@ def _fetch_by_arxiv_id(arxiv_id: str) -> dict | None:
             f"arXiv ID: {arxiv_id}\n"
             f"Abstract: {p.summary}"
         )
-        result = {
+        return {
             "source":  "arxiv_direct",
             "url":     f"https://arxiv.org/abs/{arxiv_id}",
             "title":   p.title,
             "snippet": snippet,
         }
-        set_cached(f"id:{arxiv_id}", "arxiv_direct", [result])
-        return result
     except Exception as e:
         print(f"  [arXiv direct warn] {e}")
         return None
@@ -155,11 +127,16 @@ def _fetch_by_arxiv_id(arxiv_id: str) -> dict | None:
 def _direct_arxiv_lookup(fact: str, context: str = "") -> list[dict]:
     """
     Try to find the exact paper being referenced in the fact.
+    Uses both the atomic fact AND the full summary context to identify the paper.
+    This fixes cases where the atomicizer strips the model name from a fact
+    (e.g. "The model achieved 28.4 BLEU" loses "transformer" as the subject).
     """
+    # Search both the fact and the full context for known paper keywords
     search_text = (fact + " " + context).lower()
     results = []
     seen_ids = set()
 
+    # Step 1: check known paper aliases against combined text
     for keyword, arxiv_id in KNOWN_PAPERS.items():
         if keyword in search_text and arxiv_id not in seen_ids:
             seen_ids.add(arxiv_id)
@@ -167,37 +144,22 @@ def _direct_arxiv_lookup(fact: str, context: str = "") -> list[dict]:
             if paper:
                 results.append(paper)
 
+    # Step 2: extract capitalised terms from BOTH fact and context
     combined = fact + " " + context
     caps = re.findall(r'\b[A-Z][A-Za-z0-9\-]+(?:\s+[A-Z0-9][A-Za-z0-9\-]*)?\b', combined)
+    # Deduplicate while preserving order
     seen_caps = set()
     unique_caps = [c for c in caps if not (c in seen_caps or seen_caps.add(c))]
 
     for term in unique_caps[:5]:
-        if len(term) < 3 or not _can_call_arxiv():
+        if len(term) < 3:
             continue
-
-        # Check cache
-        cache_key = f'ti:"{term}"'
-        cached = get_cached(cache_key, "arxiv")
-        if cached is not None:
-            logging.info("CACHE HIT [arxiv] %s", cache_key)
-            for paper in cached:
-                aid = paper.get("url", "").split("/abs/")[-1].split("v")[0]
-                if aid and aid not in seen_ids:
-                    seen_ids.add(aid)
-                    results.append(paper)
-            continue
-
-        time.sleep(ARXIV_DELAY_SECONDS)
-        _increment_arxiv_count()
-
         try:
             search = arxiv.Search(
-                query=cache_key,
-                max_results=RESULTS_PER_QUERY,
+                query=f'ti:"{term}"',
+                max_results=2,
                 sort_by=arxiv.SortCriterion.Relevance,
             )
-            batch_results = []
             for p in search.results():
                 aid = p.entry_id.split("/abs/")[-1].split("v")[0]
                 if aid not in seen_ids:
@@ -212,15 +174,12 @@ def _direct_arxiv_lookup(fact: str, context: str = "") -> list[dict]:
                         f"NOTE: This paper was published in {pub_year}.\n"
                         f"Abstract: {p.summary}"
                     )
-                    paper = {
+                    results.append({
                         "source":  "arxiv_direct",
                         "url":     p.entry_id,
                         "title":   p.title,
                         "snippet": snippet,
-                    }
-                    batch_results.append(paper)
-                    results.append(paper)
-            set_cached(cache_key, "arxiv", batch_results)
+                    })
         except Exception:
             pass
 
@@ -228,67 +187,38 @@ def _direct_arxiv_lookup(fact: str, context: str = "") -> list[dict]:
 
 
 def _search_arxiv(query: str) -> list[dict]:
-    """Search arXiv with the adversarial query (with caching + backoff)."""
-    # Cache check
-    cached = get_cached(query, "arxiv")
-    if cached is not None:
-        logging.info("CACHE HIT [arxiv] %s", query[:50])
-        return cached
-
-    if not _can_call_arxiv():
-        logging.warning("arXiv cap reached, using web-only for: %s", query[:50])
-        return []
-
-    time.sleep(ARXIV_DELAY_SECONDS)
-    _increment_arxiv_count()
-
+    """Search arXiv with the adversarial query."""
     results = []
-    for attempt in range(3):
-        try:
-            search = arxiv.Search(
-                query=query,
-                max_results=RESULTS_PER_QUERY,
-                sort_by=arxiv.SortCriterion.Relevance,
+    try:
+        search = arxiv.Search(
+            query=query,
+            max_results=MAX_ARXIV_RESULTS,
+            sort_by=arxiv.SortCriterion.Relevance,
+        )
+        for paper in search.results():
+            snippet = (
+                f"Title: {paper.title}\n"
+                f"Authors: {', '.join(a.name for a in paper.authors[:4])}\n"
+                f"Published: {paper.published.strftime('%Y-%m-%d')}\n"
+                f"Abstract: {paper.summary[:800]}"
             )
-            for paper in search.results():
-                snippet = (
-                    f"Title: {paper.title}\n"
-                    f"Authors: {', '.join(a.name for a in paper.authors[:4])}\n"
-                    f"Published: {paper.published.strftime('%Y-%m-%d')}\n"
-                    f"Abstract: {paper.summary[:800]}"
-                )
-                results.append({
-                    "source":  "arxiv",
-                    "url":     paper.entry_id,
-                    "title":   paper.title,
-                    "snippet": snippet,
-                })
-            break
-        except Exception as e:
-            if "429" in str(e) or "rate" in str(e).lower():
-                wait = (2 ** attempt) * 3
-                logging.warning("arXiv rate limit, waiting %ds (attempt %d/3)", wait, attempt + 1)
-                time.sleep(wait)
-            else:
-                print(f"  [arXiv warn] {e}")
-                break
-
-    if results:
-        set_cached(query, "arxiv", results)
+            results.append({
+                "source":  "arxiv",
+                "url":     paper.entry_id,
+                "title":   paper.title,
+                "snippet": snippet,
+            })
+    except Exception as e:
+        print(f"  [arXiv warn] {e}")
     return results
 
 
 def _search_web(query: str) -> list[dict]:
-    """Search the web via DuckDuckGo (with caching)."""
-    cached = get_cached(query, "web")
-    if cached is not None:
-        logging.info("CACHE HIT [web] %s", query[:50])
-        return cached
-
+    """Search the web via DuckDuckGo."""
     results = []
     try:
         with DDGS() as ddgs:
-            hits = list(ddgs.text(query, max_results=3))
+            hits = list(ddgs.text(query, max_results=MAX_WEB_RESULTS))
         for hit in hits:
             results.append({
                 "source":  "web",
@@ -298,39 +228,7 @@ def _search_web(query: str) -> list[dict]:
             })
     except Exception as e:
         print(f"  [Web warn] {e}")
-
-    if results:
-        set_cached(query, "web", results)
     return results
-
-
-# Alias so precache_evidence.py can import _web_search
-_web_search = _search_web
-
-
-def retrieve_from_semantic_scholar(arxiv_id: str) -> list[dict]:
-    """Fetch paper details from Semantic Scholar. No API key required."""
-    cache_key = f"ss:{arxiv_id}"
-    cached = get_cached(cache_key, "web")
-    if cached:
-        return cached
-    try:
-        url = f"https://api.semanticscholar.org/graph/v1/paper/arXiv:{arxiv_id}"
-        params = {"fields": "title,abstract,year,authors,tldr"}
-        r = _requests.get(url, params=params, timeout=10)
-        if r.status_code == 200:
-            data = r.json()
-            entry = [{
-                "title": data.get("title", ""),
-                "snippet": data.get("abstract", ""),
-                "url": f"https://www.semanticscholar.org/paper/{data.get('paperId','')}",
-                "source": "semantic_scholar",
-            }]
-            set_cached(cache_key, "web", entry)
-            return entry
-    except Exception:
-        pass
-    return []
 
 
 def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> list[dict]:
@@ -339,21 +237,32 @@ def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> 
       1. Direct arXiv lookup (by paper name / known ID)
       2. arXiv adversarial search
       3. DuckDuckGo web search
+      4. Venue-specific web search (if fact mentions a conference/venue)
 
-    All sources run concurrently with caching and rate-limit protection.
+    All sources run concurrently — cuts retrieval time from ~4 min to ~20-30 sec.
     """
-    from concurrent.futures import ThreadPoolExecutor, TimeoutError, as_completed
+    from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 
     tasks = []
 
+    # Build all tasks
     if fact:
         tasks.append(("direct", None, fact))
     for q in queries:
         tasks.append(("arxiv", q, None))
         tasks.append(("web",   q, None))
 
+    # Add PDF fetch tasks for known papers found in fact+context
+    if PDF_FETCH_AVAILABLE:
+        search_text = (fact + " " + context).lower()
+        for keyword, arxiv_id in KNOWN_PAPERS.items():
+            if keyword in search_text:
+                tasks.append(("pdf", arxiv_id, fact))
+                break  # one PDF fetch per call is enough
+
     fact_lower    = fact.lower()
     context_lower = context.lower()
+    combined_lower = fact_lower + " " + context_lower
 
     # Extra: venue-specific search
     venue_keywords = ["icml","neurips","nips","acl","emnlp","naacl","iclr","cvpr",
@@ -364,7 +273,8 @@ def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> 
             venue_query = f"{caps[0]} paper published conference venue official proceedings"
             tasks.append(("web", venue_query, None))
 
-    # PDF results extraction
+    # PDF results extraction — triggered for any fact containing a number
+    # Extracts results tables from the full paper, not just abstract
     if fact and re.search(r'\d', fact):
         tasks.append(("pdf", None, fact))
 
@@ -386,12 +296,13 @@ def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> 
             tasks.append(("web", method_query, None))
 
     raw_results = []
-    _context = context
+    _context = context  # captured for closure
 
     def run_task(task):
         kind, query, f = task
         try:
             if kind == "pdf":
+                # query holds arxiv_id
                 try:
                     from modules.pdf_extractor import get_paper_results
                     result = get_paper_results(query)
@@ -408,21 +319,20 @@ def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> 
         except Exception:
             return []
 
+    # Run all in parallel with a 30-second timeout per task
     with ThreadPoolExecutor(max_workers=6) as executor:
         futures = {executor.submit(run_task, t): t for t in tasks}
-        try:
-            for future in as_completed(futures, timeout=RETRIEVAL_TIMEOUT_SECONDS):
-                try:
-                    raw_results.extend(future.result(timeout=RETRIEVAL_TIMEOUT_SECONDS))
-                except Exception:
-                    pass
-        except TimeoutError:
-            pass
+        for future in as_completed(futures, timeout=45):
+            try:
+                raw_results.extend(future.result(timeout=30))
+            except Exception:
+                pass
 
-    # Deduplicate — PDF first, then direct, then Semantic Scholar, then rest
+    # Deduplicate — PDF first (most detailed), then direct, then rest
     all_evidence = []
     seen_urls    = set()
 
+    # PDF content first — has results tables
     for ev in raw_results:
         if ev.get("source") == "arxiv_pdf":
             url = ev.get("url", "")
@@ -430,6 +340,7 @@ def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> 
                 seen_urls.add(url)
                 all_evidence.append(ev)
 
+    # Direct arXiv abstract second
     for ev in raw_results:
         if ev.get("source") == "arxiv_direct":
             url = ev.get("url", "")
@@ -437,18 +348,7 @@ def retrieve_evidence(queries: list[str], fact: str = "", context: str = "") -> 
                 seen_urls.add(url)
                 all_evidence.append(ev)
 
-    # Try Semantic Scholar if we found an arxiv_id from direct lookup
-    search_text = (fact + " " + context).lower()
-    for keyword, aid in KNOWN_PAPERS.items():
-        if keyword in search_text:
-            ss_results = retrieve_from_semantic_scholar(aid)
-            for ev in ss_results:
-                url = ev.get("url", "")
-                if url and url not in seen_urls:
-                    seen_urls.add(url)
-                    all_evidence.append(ev)
-            break  # only need one paper match
-
+    # Everything else
     for ev in raw_results:
         if ev.get("source") not in ("arxiv_pdf", "arxiv_direct"):
             url = ev.get("url", "")

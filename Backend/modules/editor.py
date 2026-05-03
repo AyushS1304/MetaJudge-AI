@@ -14,8 +14,12 @@ original phrasing must be maintained as much as possible.
 
 import re
 import json
+from groq import Groq
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import GROQ_API_KEY, STRONG_MODEL
 
-from modules.nvidia_client import nvidia_chat
+client = Groq(api_key=GROQ_API_KEY)
 
 SYSTEM_PROMPT = """You are a surgical text editor. A specific claim in a text has been proven incorrect.
 Your job is to make the MINIMAL edit to fix it.
@@ -66,25 +70,17 @@ def edit_sentence(
         f"Make the minimal surgical correction. Return JSON."
     )
 
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user", "content": user_msg},
-    ]
+    response = client.chat.completions.create(
+        model=STRONG_MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": user_msg},
+        ],
+        temperature=0.0,
+        max_tokens=512,
+    )
 
-    try:
-        raw = nvidia_chat(messages, role="editor", temperature=0.0, max_tokens=512)
-    except Exception:
-        try:
-            raw = nvidia_chat(messages, role="fast", temperature=0.0, max_tokens=512)
-        except Exception:
-            return {
-                "corrected_text": original_sentence,
-                "error_span": "",
-                "correction": "",
-                "source_url": src_url,
-                "changed": False,
-            }
-
+    raw = response.choices[0].message.content.strip()
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
 

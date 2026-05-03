@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="700" viewBox="0 0 1200 700">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1f1f1f"/>
+    </marker>
+    <marker id="softarrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#595959"/>
+    </marker>
+    <style>
+      .box { rx: 12; ry: 12; stroke-width: 2.4; }
+      .blue { fill: #edf5ff; stroke: #1f4e99; }
+      .orange { fill: #fff1df; stroke: #c45a11; }
+      .green { fill: #eaf8ef; stroke: #16803c; }
+      .gray { fill: #f5f5f5; stroke: #595959; stroke-width: 1.6; }
+      .label { font-family: Arial, sans-serif; font-size: 20px; fill: #1f1f1f; text-anchor: middle; dominant-baseline: middle; }
+      .small { font-size: 17px; fill: #444444; }
+      .arrow { stroke: #1f1f1f; stroke-width: 2.4; fill: none; marker-end: url(#arrow); }
+      .soft { stroke: #595959; stroke-width: 1.8; stroke-dasharray: 7 7; fill: none; marker-end: url(#softarrow); }
+    </style>
+  </defs>
+
+  <rect width="1200" height="700" fill="#ffffff"/>
+  <text x="600" y="38" class="label" style="font-size:28px;font-weight:700">MetaJudge-AI Architecture Flow</text>
+
+  <rect fill="#edf5ff" stroke="#1f4e99" stroke-width="2.4" rx="12" ry="12" x="40" y="80" width="190" height="78"/>
+  <text class="label" x="135" y="109"><tspan x="135">Input summary</tspan><tspan x="135" dy="26">AI/ML paper text</tspan></text>
+
+  <rect fill="#edf5ff" stroke="#1f4e99" stroke-width="2.4" rx="12" ry="12" x="285" y="80" width="205" height="78"/>
+  <text class="label" x="387" y="109"><tspan x="387">1. Atomicizer</tspan><tspan x="387" dy="26">self-contained claims</tspan></text>
+
+  <rect fill="#fff1df" stroke="#c45a11" stroke-width="2.4" rx="12" ry="12" x="545" y="80" width="215" height="78"/>
+  <text class="label" x="652" y="109"><tspan x="652">1.5 Consistency</tspan><tspan x="652" dy="26">claim-pair graph</tspan></text>
+
+  <rect fill="#edf5ff" stroke="#1f4e99" stroke-width="2.4" rx="12" ry="12" x="825" y="80" width="220" height="78"/>
+  <text class="label" x="935" y="109"><tspan x="935">2. Adversarial</tspan><tspan x="935" dy="26">query generation</tspan></text>
+
+  <rect fill="#f5f5f5" stroke="#595959" stroke-width="1.6" rx="12" ry="12" x="785" y="205" width="300" height="74"/>
+  <text x="935" y="222" font-family="Arial, sans-serif" font-size="17" fill="#444444" text-anchor="middle"><tspan x="935">Evidence sources</tspan><tspan x="935" dy="21">arXiv + web</tspan><tspan x="935" dy="21">PDF + SQLite cache</tspan></text>
+
+  <rect fill="#edf5ff" stroke="#1f4e99" stroke-width="2.4" rx="12" ry="12" x="825" y="330" width="220" height="78"/>
+  <text class="label" x="935" y="359"><tspan x="935">3. Hybrid retriever</tspan><tspan x="935" dy="26">evidence block</tspan></text>
+
+  <rect fill="#eaf8ef" stroke="#16803c" stroke-width="2.4" rx="12" ry="12" x="545" y="330" width="215" height="78"/>
+  <text class="label" x="652" y="359"><tspan x="652">4. LLM judge</tspan><tspan x="652" dy="26">verdict + quote</tspan></text>
+
+  <rect fill="#eaf8ef" stroke="#16803c" stroke-width="2.4" rx="12" ry="12" x="285" y="330" width="205" height="78"/>
+  <text class="label" x="387" y="359"><tspan x="387">4b. Deep verifier</tspan><tspan x="387" dy="26">PDF + 405B</tspan></text>
+
+  <rect fill="#fff1df" stroke="#c45a11" stroke-width="2.4" rx="12" ry="12" x="545" y="505" width="215" height="78"/>
+  <text class="label" x="652" y="534"><tspan x="652">5. CoVe auditor</tspan><tspan x="652" dy="26">verify judge quote</tspan></text>
+
+  <rect fill="#eaf8ef" stroke="#16803c" stroke-width="2.4" rx="12" ry="12" x="285" y="505" width="205" height="78"/>
+  <text class="label" x="387" y="534"><tspan x="387">6. Surgical editor</tspan><tspan x="387" dy="26">minimal correction</tspan></text>
+
+  <rect fill="#eaf8ef" stroke="#16803c" stroke-width="2.4" rx="12" ry="12" x="40" y="505" width="190" height="78"/>
+  <text class="label" x="135" y="534"><tspan x="135">Corrected summary</tspan><tspan x="135" dy="26">and verdict report</tspan></text>
+
+  <path class="arrow" d="M230 119 L285 119"/>
+  <path class="arrow" d="M490 119 L545 119"/>
+  <path class="arrow" d="M760 119 L825 119"/>
+  <path class="arrow" d="M935 158 L935 330"/>
+  <path class="soft" d="M935 279 L935 330"/>
+  <path class="arrow" d="M825 369 L760 369"/>
+  <path class="soft" d="M545 369 L490 369"/>
+  <path class="soft" d="M387 330 C387 292 505 292 545 330"/>
+  <path class="arrow" d="M652 408 L652 505"/>
+  <path class="arrow" d="M545 544 L490 544"/>
+  <path class="arrow" d="M285 544 L230 544"/>
+
+  <text class="label small" x="625" y="300">weak evidence</text>
+  <text class="label small" x="710" y="465">contradicted</text>
+  <text class="label small" x="510" y="574">confirmed</text>
+  <path class="soft" d="M652 158 C652 230 240 230 135 505"/>
+  <text class="label small" x="404" y="234">internal contradiction or no-edit path</text>
+</svg>

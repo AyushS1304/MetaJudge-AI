@@ -1,0 +1,48 @@
+# Secrets
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+env
+build/
+wheels/
+*.egg-info/
+.eggs/
+
+# Node / frontend
+node_modules/
+dist/
+dist-ssr/
+*.tsbuildinfo
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Generated caches and logs
+*.log
+.coverage
+htmlcov/
+data/*.db
+*/data/*.db
+**/data/skepticbench_full.json
+**/data/skepticbench_25.json
+**/data/skepticbench_new75.json
+**/data/skepticbench_remaining45.json
+**/.streamlit/secrets.toml
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

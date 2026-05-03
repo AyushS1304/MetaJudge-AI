@@ -1,0 +1,61 @@
+\begin{tikzpicture}[
+    node distance=0.75cm and 0.75cm,
+    process/.style={rectangle, rounded corners=4pt, draw=myblue, fill=blue!5,
+        minimum width=3.2cm, minimum height=0.95cm, align=center, font=\small,
+        line width=0.7pt},
+    guard/.style={rectangle, rounded corners=4pt, draw=myorange, fill=orange!8,
+        minimum width=3.2cm, minimum height=0.95cm, align=center, font=\small,
+        line width=0.7pt},
+    verify/.style={rectangle, rounded corners=4pt, draw=mygreen, fill=green!6,
+        minimum width=3.2cm, minimum height=0.95cm, align=center, font=\small,
+        line width=0.7pt},
+    source/.style={rectangle, rounded corners=4pt, draw=mygray, fill=black!4,
+        minimum width=2.65cm, minimum height=0.75cm, align=center, font=\footnotesize,
+        line width=0.6pt},
+    output/.style={rectangle, rounded corners=4pt, draw=mygreen!80!black, fill=green!10,
+        minimum width=3.2cm, minimum height=0.95cm, align=center, font=\small,
+        line width=0.8pt},
+    arrow/.style={-{Stealth[length=4pt]}, line width=0.75pt},
+    softarrow/.style={-{Stealth[length=4pt]}, line width=0.65pt, dashed},
+    label/.style={font=\footnotesize, color=mygray, align=center}
+]
+\node[process, fill=blue!12] (input) {Input summary\\AI/ML paper text};
+\node[process, right=of input] (atomic) {1. Atomicizer\\self-contained claims};
+\node[guard, right=of atomic] (consistency) {1.5 Consistency\\claim-pair graph};
+\node[process, right=of consistency] (query) {2. Adversarial\\query generation};
+
+\node[source, below=1.0cm of query, xshift=-3.4cm] (arxiv) {Direct arXiv\\paper lookup};
+\node[source, right=0.35cm of arxiv] (search) {Adversarial\\arXiv + web};
+\node[source, right=0.35cm of search] (pdf) {PDF fallback\\PyMuPDF};
+\node[source, right=0.35cm of pdf] (cache) {SQLite\\evidence cache};
+
+\node[process, below=1.95cm of query] (retriever) {3. Hybrid retriever\\evidence block};
+\node[verify, left=of retriever] (judge) {4. LLM judge\\support/contradict/insufficient};
+\node[verify, left=of judge] (deep) {4b. Deep verifier\\broader search + 405B};
+\node[guard, below=of judge] (cove) {5. CoVe auditor\\verify judge quote};
+\node[output, left=of cove] (editor) {6. Surgical editor\\minimal correction};
+\node[output, left=of editor] (final) {Corrected summary\\and verdict report};
+
+\node[source, below=of consistency] (internal) {Internal contradiction\\skip retrieval};
+\node[source, below=of atomic] (noedit) {Supported / disputed\\no edit};
+
+\draw[arrow] (input) -- (atomic);
+\draw[arrow] (atomic) -- (consistency);
+\draw[arrow] (consistency) -- node[label, above]{externally checkable} (query);
+\draw[arrow] (query) -- (retriever);
+\draw[arrow] (retriever) -- (judge);
+\draw[arrow] (judge) -- node[label, above]{weak evidence} (deep);
+\draw[softarrow] (deep) -- node[label, above]{enriched context} (judge);
+\draw[arrow] (judge) -- node[label, right]{contradicted} (cove);
+\draw[arrow] (cove) -- node[label, above]{confirmed} (editor);
+\draw[arrow] (editor) -- (final);
+\draw[softarrow] (consistency) -- node[label, right]{conflict} (internal);
+\draw[softarrow] (internal) -| (final);
+\draw[softarrow] (judge) |- node[label, near start, right]{supported or insufficient} (noedit);
+\draw[softarrow] (noedit) -| (final);
+
+\draw[softarrow] (arxiv) -- (retriever);
+\draw[softarrow] (search) -- (retriever);
+\draw[softarrow] (pdf) -- (retriever);
+\draw[softarrow] (cache) -- (retriever);
+\end{tikzpicture}

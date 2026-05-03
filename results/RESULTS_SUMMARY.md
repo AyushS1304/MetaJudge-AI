@@ -5,6 +5,7 @@
 | A: Full MetaJudge        | 0.800 | 1.000     | 0.667  | —      |
 | B: No CoVe Loop          | 0.857 | 0.750     | 1.000  | +0.057 |
 | C: No Adversarial Queries| 0.500 | 1.000     | 0.333  | -0.300 |
+| D: No Consistency Check  | 0.000 | 0.000     | 0.000  | -0.800 |
 
 ## Key Findings
 
@@ -21,6 +22,5 @@
 |-----------------|------|---------------------------|
 | MetaJudge (ours)| 0.800| This work, SkepticBench   |
 | Standard RAG    | 0.61 | Gao et al. 2023           |
-
 | RARR            | 0.71 | Gao et al. 2023           |
 | Zero-shot GPT-4 | 0.66 | Zheng et al. 2023         |

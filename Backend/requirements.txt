@@ -1,12 +1,13 @@
 arxiv
 ddgs
 duckduckgo-search
-openai>=1.30.0
-matplotlib
+google-genai
+groq
+langchain-community
 pandas
 PyMuPDF
 python-dotenv
 requests
+streamlit
 fastapi
 uvicorn[standard]
-pydantic

@@ -12,8 +12,12 @@ Each atomic fact should be:
 
 import json
 import re
+from groq import Groq
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from config import GROQ_API_KEY, FAST_MODEL
 
-from modules.nvidia_client import nvidia_chat
+client = Groq(api_key=GROQ_API_KEY)
 
 SYSTEM_PROMPT = """You are an expert at decomposing text into atomic facts for fact-checking.
 
@@ -45,12 +49,17 @@ def atomicize(text: str) -> list[str]:
     Returns:
         A list of atomic fact strings.
     """
-    messages = [
-        {"role": "system", "content": SYSTEM_PROMPT},
-        {"role": "user",   "content": f"Decompose this into atomic facts:\n\n{text}"},
-    ]
+    response = client.chat.completions.create(
+        model=FAST_MODEL,
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user",   "content": f"Decompose this into atomic facts:\n\n{text}"}
+        ],
+        temperature=0.1,
+        max_tokens=1024,
+    )
 
-    raw = nvidia_chat(messages, role="fast", temperature=0.1, max_tokens=1024)
+    raw = response.choices[0].message.content.strip()
 
     # Strip markdown code blocks if model wrapped the JSON
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
@@ -67,7 +76,7 @@ def atomicize(text: str) -> list[str]:
             return facts
 
     # Last resort: split on newlines and strip bullets
-    lines = [re.sub(r"^[\d\-\*\.]+\s*", "", l).strip() for l in raw.splitlines()]
+    lines = [re.sub(r"^[\d\-\*\.\)]+\s*", "", l).strip() for l in raw.splitlines()]
     return [l for l in lines if len(l) > 10]
 
 
