@@ -21,5 +21,6 @@
 |-----------------|------|---------------------------|
 | MetaJudge (ours)| 0.800| This work, SkepticBench   |
 | Standard RAG    | 0.61 | Gao et al. 2023           |
+
 | RARR            | 0.71 | Gao et al. 2023           |
 | Zero-shot GPT-4 | 0.66 | Zheng et al. 2023         |

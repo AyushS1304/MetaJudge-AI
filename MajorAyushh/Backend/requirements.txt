@@ -1,0 +1,13 @@
+arxiv
+ddgs
+duckduckgo-search
+google-genai
+groq
+langchain-community
+pandas
+PyMuPDF
+python-dotenv
+requests
+streamlit
+fastapi
+uvicorn[standard]
