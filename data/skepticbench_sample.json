@@ -1,0 +1,184 @@
+[
+    {
+      "id": "sb001",
+      "paper": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+      "authors": "Devlin, Jacob; Chang, Ming-Wei; Lee, Kenton; Toutanova, Kristina",
+      "year": 2018,
+      "arxiv_id": "1810.04805",
+      "summary": "BERT was introduced by Google in 2018 and uses a bidirectional transformer encoder architecture. The model was pre-trained on BookCorpus and English Wikipedia using masked language modelling. BERT achieved 80.5% F1 on the SQuAD 2.0 benchmark, outperforming all prior models at the time of publication.",
+      "atomic_facts": [
+        "BERT was introduced by Google.",
+        "BERT was introduced in 2018.",
+        "BERT uses a bidirectional transformer encoder architecture.",
+        "BERT was pre-trained on BookCorpus and English Wikipedia.",
+        "BERT uses masked language modelling as a pre-training objective.",
+        "BERT achieved 86.7% F1 on the SQuAD 2.0 benchmark.",
+        "BERT outperformed all prior models at the time of publication.",
+        "The BERT paper was authored by Devlin et al."
+      ],
+      "corrupted_facts": [
+        "BERT was introduced by Google.",
+        "BERT was introduced in 2018.",
+        "BERT uses a bidirectional transformer encoder architecture.",
+        "BERT was pre-trained on BookCorpus and English Wikipedia.",
+        "BERT uses masked language modelling as a pre-training objective.",
+        "BERT achieved 80.5% F1 on the SQuAD 2.0 benchmark.",
+        "BERT outperformed all prior models at the time of publication.",
+        "The BERT paper was authored by Devlin et al."
+      ],
+      "labels": ["true","true","true","true","true","false","true","true"],
+      "injected_errors": [
+        {
+          "type": "metric",
+          "correct": "BERT achieved 86.7% F1 on the SQuAD 2.0 benchmark.",
+          "wrong": "BERT achieved 80.5% F1 on the SQuAD 2.0 benchmark.",
+          "fact": "BERT achieved 80.5% F1 on the SQuAD 2.0 benchmark.",
+          "source": "https://arxiv.org/abs/1810.04805"
+        }
+      ],
+      "clean": false
+    },
+    {
+      "id": "sb002",
+      "paper": "GPT-4 Technical Report",
+      "authors": "OpenAI",
+      "year": 2023,
+      "arxiv_id": "2303.08774",
+      "summary": "GPT-4 is a large multimodal model developed by OpenAI, released in March 2022. It accepts image and text inputs and produces text outputs. GPT-4 scored approximately 86.4% on the MMLU benchmark and demonstrated human-level performance on various professional exams.",
+      "atomic_facts": [
+        "GPT-4 is a large multimodal model.",
+        "GPT-4 was developed by OpenAI.",
+        "GPT-4 was released in March 2023.",
+        "GPT-4 accepts image and text inputs.",
+        "GPT-4 produces text outputs.",
+        "GPT-4 scored approximately 86.4% on the MMLU benchmark.",
+        "GPT-4 demonstrated human-level performance on various professional exams."
+      ],
+      "corrupted_facts": [
+        "GPT-4 is a large multimodal model.",
+        "GPT-4 was developed by OpenAI.",
+        "GPT-4 was released in March 2022.",
+        "GPT-4 accepts image and text inputs.",
+        "GPT-4 produces text outputs.",
+        "GPT-4 scored approximately 86.4% on the MMLU benchmark.",
+        "GPT-4 demonstrated human-level performance on various professional exams."
+      ],
+      "labels": ["true","true","false","true","true","true","true"],
+      "injected_errors": [
+        {
+          "type": "date",
+          "correct": "GPT-4 was released in March 2023.",
+          "wrong": "GPT-4 was released in March 2022.",
+          "fact": "GPT-4 was released in March 2022.",
+          "source": "https://arxiv.org/abs/2303.08774"
+        }
+      ],
+      "clean": false
+    },
+    {
+      "id": "sb003",
+      "paper": "Attention Is All You Need",
+      "authors": "Vaswani, Ashish; Shazeer, Noam; Parmar, Niki; Uszkoreit, Jakob",
+      "year": 2017,
+      "arxiv_id": "1706.03762",
+      "summary": "Attention Is All You Need was published by Vaswani et al. in 2017 at NeurIPS. It introduced the transformer architecture which relies entirely on attention mechanisms without recurrence or convolution. The transformer achieved a BLEU score of 28.4 on WMT 2014 English-to-German translation.",
+      "atomic_facts": [
+        "Attention Is All You Need was published by Vaswani et al.",
+        "The paper was published in 2017.",
+        "The paper was published at NeurIPS.",
+        "The paper introduced the transformer architecture.",
+        "The transformer relies entirely on attention mechanisms.",
+        "The transformer does not use recurrence.",
+        "The transformer does not use convolution.",
+        "The transformer achieved a BLEU score of 28.4 on WMT 2014 English-to-German."
+      ],
+      "corrupted_facts": [
+        "Attention Is All You Need was published by Vaswani et al.",
+        "The paper was published in 2017.",
+        "The paper was published at NeurIPS.",
+        "The paper introduced the transformer architecture.",
+        "The transformer relies entirely on attention mechanisms.",
+        "The transformer does not use recurrence.",
+        "The transformer does not use convolution.",
+        "The transformer achieved a BLEU score of 28.4 on WMT 2014 English-to-German."
+      ],
+      "labels": ["true","true","true","true","true","true","true","true"],
+      "injected_errors": [],
+      "clean": true
+    },
+    {
+      "id": "sb004",
+      "paper": "FActScore: Fine-grained Atomic Evaluation of Factual Precision in Long Form Text Generation",
+      "authors": "Min, Sewon; Krishna, Kalpesh; Lyu, Xinxi; Lewis, Mike",
+      "year": 2023,
+      "arxiv_id": "2305.14251",
+      "summary": "FActScore was proposed by Lee et al. in 2022 as a framework for evaluating factual precision. It decomposes model outputs into atomic facts and evaluates each one independently against a knowledge source. The framework was evaluated on biographies generated by ChatGPT and InstructGPT.",
+      "atomic_facts": [
+        "FActScore was proposed by Min et al.",
+        "FActScore was proposed in 2023.",
+        "FActScore is a framework for evaluating factual precision.",
+        "FActScore decomposes model outputs into atomic facts.",
+        "FActScore evaluates each atomic fact independently.",
+        "FActScore evaluates facts against a knowledge source.",
+        "FActScore was evaluated on biographies generated by ChatGPT.",
+        "FActScore was evaluated on biographies generated by InstructGPT."
+      ],
+      "corrupted_facts": [
+        "FActScore was proposed by Lee et al.",
+        "FActScore was proposed in 2022.",
+        "FActScore is a framework for evaluating factual precision.",
+        "FActScore decomposes model outputs into atomic facts.",
+        "FActScore evaluates each atomic fact independently.",
+        "FActScore evaluates facts against a knowledge source.",
+        "FActScore was evaluated on biographies generated by ChatGPT.",
+        "FActScore was evaluated on biographies generated by InstructGPT."
+      ],
+      "labels": ["false","false","true","true","true","true","true","true"],
+      "injected_errors": [
+        {
+          "type": "author",
+          "correct": "FActScore was proposed by Min et al.",
+          "wrong": "FActScore was proposed by Lee et al.",
+          "fact": "FActScore was proposed by Lee et al.",
+          "source": "https://arxiv.org/abs/2305.14251"
+        },
+        {
+          "type": "date",
+          "correct": "FActScore was proposed in 2023.",
+          "wrong": "FActScore was proposed in 2022.",
+          "fact": "FActScore was proposed in 2022.",
+          "source": "https://arxiv.org/abs/2305.14251"
+        }
+      ],
+      "clean": false
+    },
+    {
+      "id": "sb005",
+      "paper": "LLaMA 2: Open Foundation and Fine-Tuned Chat Models",
+      "authors": "Touvron, Hugo; Martin, Louis; Stone, Kevin; Albert, Peter",
+      "year": 2023,
+      "arxiv_id": "2307.09288",
+      "summary": "LLaMA 2 was developed by Meta AI and released in 2023. It is available in 7B, 13B, and 70B parameter sizes. The model uses reinforcement learning from human feedback for safety alignment and was trained on 2 trillion tokens of publicly available data.",
+      "atomic_facts": [
+        "LLaMA 2 was developed by Meta AI.",
+        "LLaMA 2 was released in 2023.",
+        "LLaMA 2 is available in 7B parameter size.",
+        "LLaMA 2 is available in 13B parameter size.",
+        "LLaMA 2 is available in 70B parameter size.",
+        "LLaMA 2 uses reinforcement learning from human feedback for safety alignment.",
+        "LLaMA 2 was trained on 2 trillion tokens of publicly available data."
+      ],
+      "corrupted_facts": [
+        "LLaMA 2 was developed by Meta AI.",
+        "LLaMA 2 was released in 2023.",
+        "LLaMA 2 is available in 7B parameter size.",
+        "LLaMA 2 is available in 13B parameter size.",
+        "LLaMA 2 is available in 70B parameter size.",
+        "LLaMA 2 uses reinforcement learning from human feedback for safety alignment.",
+        "LLaMA 2 was trained on 2 trillion tokens of publicly available data."
+      ],
+      "labels": ["true","true","true","true","true","true","true"],
+      "injected_errors": [],
+      "clean": true
+    }
+  ]

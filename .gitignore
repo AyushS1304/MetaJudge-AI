@@ -46,3 +46,6 @@ data/*.db
 Thumbs.db
 .vscode/
 .idea/
+
+.pptx
+WORKFLOW_ARCHITECTURE.md
